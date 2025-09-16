@@ -1,0 +1,15 @@
+{
+  "name": "synapse",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "install:all": "npm install --workspaces",
+    "start:server": "npm --workspace apps/server run start:dev",
+    "build:server": "npm --workspace apps/server run build",
+    "start:web": "npm --workspace apps/web run dev",
+    "build:web": "npm --workspace apps/web run build"
+  }
+}
+

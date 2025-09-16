@@ -1,0 +1,21 @@
+# Node
+node_modules/
+**/dist/
+.turbo/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Env
+.env
+.env.local
+.env*.local
+
+# Editor
+.DS_Store
+.idea/
+*.swp
+.vscode/
