@@ -2,7 +2,7 @@ import { ReactNode } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Brain, LayoutDashboard, BookOpen, Users, LogOut } from 'lucide-react';
+import { Brain, LayoutDashboard, BookOpen, Users, LogOut, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface DashboardLayoutProps {
@@ -25,6 +25,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/decks', label: 'Decks', icon: BookOpen },
     { to: '/classes', label: 'Turmas', icon: Users },
+    { to: '/reports', label: 'Relatórios', icon: TrendingUp },
   ];
 
   return (
