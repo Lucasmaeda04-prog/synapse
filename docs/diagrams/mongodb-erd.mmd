@@ -1,0 +1,73 @@
+erDiagram
+  Assignment [assignments] {
+    objectId deck_id*
+    objectId class_id
+    objectId student_id
+    date due_date
+  }
+  Card [cards] {
+    string type*
+    string url*
+    objectId deck_id*
+    string front*
+    string back*
+    string hints
+    string media
+  }
+  Class [classes] {
+    objectId teacher_id*
+    string name*
+    objectId student_ids
+    string org_id
+    string school_id
+  }
+  Deck [decks] {
+    objectId owner_id*
+    string title*
+    string description
+    string tags
+    boolean is_public
+    int cards_count
+    string org_id
+    string school_id
+  }
+  Progress [progress] {
+    objectId student_id*
+    objectId deck_id*
+    int total_cards*
+    int learned*
+    int due_today*
+    date last_activity_at*
+  }
+  Review [reviews] {
+    objectId student_id*
+    objectId card_id*
+    objectId deck_id*
+    int rating*
+    int elapsed_ms*
+    date scheduled_at*
+    date reviewed_at*
+    date next_due_at*
+    int stability*
+    int difficulty*
+  }
+  User [users] {
+    string role*
+    string email*
+    string password_hash*
+    string name*
+    string org_id
+    string school_id
+  }
+  Deck ||--o{ Assignment : "deck_id"
+  Class ||--o{ Assignment : "class_id"
+  User ||--o{ Assignment : "student_id"
+  Deck ||--o{ Card : "deck_id"
+  User ||--o{ Class : "teacher_id"
+  Class ||--o{ User : "student_ids"
+  User ||--o{ Deck : "owner_id"
+  User ||--o{ Progress : "student_id"
+  Deck ||--o{ Progress : "deck_id"
+  User ||--o{ Review : "student_id"
+  Card ||--o{ Review : "card_id"
+  Deck ||--o{ Review : "deck_id"
