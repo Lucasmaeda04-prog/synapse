@@ -1,46 +1,94 @@
-import { useEffect, useState } from 'react'
-import './App.css'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { Layout } from './components/layout/Layout'
+import { ProtectedRoute } from './components/auth/ProtectedRoute'
+import { LoginPage } from './pages/auth/LoginPage'
+import { HomePage } from './pages/HomePage'
+import { UnauthorizedPage } from './pages/UnauthorizedPage'
+import { TeacherDashboardPage } from './pages/teacher/DashboardPage'
+import { TeacherDecksPage } from './pages/teacher/DecksPage'
+import { TeacherClassesPage } from './pages/teacher/ClassesPage'
+import { StudentDecksPage } from './pages/student/DecksPage'
+import { StudentProgressPage } from './pages/student/ProgressPage'
+import { StudyPage } from './pages/student/StudyPage'
+import { useAuthStore } from './store/auth'
+import './index.css'
 
-type Health = {
-  status: string
-  db?: 'up' | 'down'
-  dbState?: number
-  timestamp: string
-}
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+})
 
-function App() {
-  const [health, setHealth] = useState<Health | null>(null)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    const api = import.meta.env.VITE_API_URL || 'http://localhost:3000'
-    fetch(`${api}/health`, { credentials: 'include' })
-      .then(async (r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`)
-        return r.json()
-      })
-      .then((data: Health) => setHealth(data))
-      .catch((err: unknown) => setError((err as Error).message))
-  }, [])
+function AppRoutes() {
+  const { isAuthenticated, user } = useAuthStore()
 
   return (
-    <div style={{ padding: 24 }}>
-      <h1>Synapse — Web</h1>
-      <p>
-        API: <code>{import.meta.env.VITE_API_URL || 'http://localhost:3000'}</code>
-      </p>
-      <h2>Health</h2>
-      {!health && !error && <p>Carregando...</p>}
-      {error && (
-        <p style={{ color: 'crimson' }}>Erro ao consultar /health: {error}</p>
-      )}
-      {health && (
-        <pre style={{ background: '#f5f5f5', padding: 12 }}>
-{JSON.stringify(health, null, 2)}
-        </pre>
-      )}
-    </div>
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/unauthorized" element={<UnauthorizedPage />} />
+      
+      <Route path="/" element={<Layout />}>
+        <Route index element={<HomePage />} />
+        
+        {/* Teacher Routes */}
+        <Route path="/teacher/*" element={
+          <ProtectedRoute allowedRoles={['TEACHER']}>
+            <Routes>
+              <Route path="dashboard" element={<TeacherDashboardPage />} />
+              <Route path="decks" element={<TeacherDecksPage />} />
+              <Route path="classes" element={<TeacherClassesPage />} />
+              <Route path="reports" element={<div>Teacher Reports (Coming Soon)</div>} />
+            </Routes>
+          </ProtectedRoute>
+        } />
+        
+        {/* Student Routes */}
+        <Route path="/student/*" element={
+          <ProtectedRoute allowedRoles={['STUDENT']}>
+            <Routes>
+              <Route path="decks" element={<StudentDecksPage />} />
+              <Route path="progress" element={<StudentProgressPage />} />
+              <Route path="study/:deckId" element={<StudyPage />} />
+            </Routes>
+          </ProtectedRoute>
+        } />
+        
+        {/* Admin Routes */}
+        <Route path="/admin/*" element={
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <Routes>
+              <Route path="users" element={<div>Admin Users (Coming Soon)</div>} />
+              <Route path="reports" element={<div>Admin Reports (Coming Soon)</div>} />
+            </Routes>
+          </ProtectedRoute>
+        } />
+      </Route>
+      
+      {/* Redirect based on user role */}
+      <Route path="*" element={
+        isAuthenticated && user ? (
+          user.role === 'TEACHER' ? <Navigate to="/teacher/dashboard" replace /> :
+          user.role === 'STUDENT' ? <Navigate to="/student/decks" replace /> :
+          user.role === 'ADMIN' ? <Navigate to="/admin/users" replace /> :
+          <Navigate to="/" replace />
+        ) : (
+          <Navigate to="/login" replace />
+        )
+      } />
+    </Routes>
   )
 }
 
-export default App
+export default function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <Router>
+        <AppRoutes />
+      </Router>
+    </QueryClientProvider>
+  )
+}
