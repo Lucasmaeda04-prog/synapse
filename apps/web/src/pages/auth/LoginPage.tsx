@@ -4,7 +4,7 @@ import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card'
 import { useAuthStore } from '../../store/auth'
-import { BookOpen, AlertCircle } from 'lucide-react'
+import { BookOpen, CircleAlert as AlertCircle } from 'lucide-react'
 
 export function LoginPage() {
   const [email, setEmail] = useState('')

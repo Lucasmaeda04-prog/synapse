@@ -1,15 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '../ui/button'
 import { useAuthStore } from '../../store/auth'
-import { 
-  BookOpen, 
-  LogOut, 
-  User, 
-  Users, 
-  GraduationCap,
-  BarChart3,
-  Settings
-} from 'lucide-react'
+import { BookOpen, LogOut, User, Users, GraduationCap, ChartBar as BarChart3, Settings } from 'lucide-react'
 
 export function Navbar() {
   const { user, logout } = useAuthStore()

@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { Badge } from '../../components/ui/badge'
 import { mockDecks, mockProgress } from '../../data/mock'
 import { formatDate } from '../../lib/utils'
-import { Search, BookOpen, Play, BarChart3 } from 'lucide-react'
+import { Search, BookOpen, Play, ChartBar as BarChart3 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 export function StudentDecksPage() {

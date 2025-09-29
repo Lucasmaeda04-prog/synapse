@@ -6,7 +6,7 @@ import { Badge } from '../../components/ui/badge'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog'
 import { mockDecks } from '../../data/mock'
 import { formatDate } from '../../lib/utils'
-import { Plus, Search, BookOpen, Edit, Trash2, Eye } from 'lucide-react'
+import { Plus, Search, BookOpen, CreditCard as Edit, Trash2, Eye } from 'lucide-react'
 
 export function TeacherDecksPage() {
   const [searchTerm, setSearchTerm] = useState('')
