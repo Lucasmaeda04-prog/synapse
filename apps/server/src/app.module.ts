@@ -6,6 +6,8 @@ import { AppService } from './app.service';
 import { HealthController } from './health.controller';
 import { HealthService } from './health.service';
 import { DatabaseModule } from './database/database.module';
+import { DecksModule } from './decks/decks.module';
+import { ClassesModule } from './classes/classes.module';
 
 @Module({
   imports: [
@@ -21,6 +23,8 @@ import { DatabaseModule } from './database/database.module';
       }),
     }),
     DatabaseModule,
+    DecksModule,
+    ClassesModule,
   ],
   controllers: [AppController, HealthController],
   providers: [AppService, HealthService],

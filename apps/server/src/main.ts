@@ -24,18 +24,45 @@ async function bootstrap() {
   });
 
   // Swagger condicional
+  const port = Number(config.get<string>('PORT') ?? 3000);
   if ((config.get<string>('SWAGGER_ENABLED') || '').toLowerCase() === 'true') {
     const swaggerConfig = new DocumentBuilder()
       .setTitle('Synapse API')
-      .setDescription('Documentação da API do Synapse')
+      .setDescription(
+        'API do Synapse - Plataforma de aprendizado com repetição espaçada\n\n' +
+        '## Recursos disponíveis\n' +
+        '- **Decks**: Criar e gerenciar decks de flashcards\n' +
+        '- **Classes**: Gerenciar turmas e alunos\n' +
+        '- **Cards**: Gerenciar cards dentro dos decks (em breve)\n' +
+        '- **Study**: Sistema de estudo com repetição espaçada (em breve)\n' +
+        '- **Reports**: Relatórios de progresso (em breve)\n\n' +
+        '## Autenticação\n' +
+        'A autenticação será implementada via JWT Bearer Token.\n' +
+        'Por enquanto, as rotas usam IDs temporários para testes.'
+      )
       .setVersion('0.1.0')
-      .addBearerAuth()
+      .addTag('decks', 'Operações relacionadas a decks de flashcards')
+      .addTag('classes', 'Operações relacionadas a turmas')
+      .addTag('health', 'Status e saúde da aplicação')
+      .addBearerAuth(
+        {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+          description: 'JWT Token de autenticação (em breve)',
+        },
+        'JWT-auth',
+      )
       .build();
     const doc = SwaggerModule.createDocument(app, swaggerConfig);
-    SwaggerModule.setup('/docs', app, doc);
+    SwaggerModule.setup('/docs', app, doc, {
+      customSiteTitle: 'Synapse API Docs',
+      customfavIcon: 'https://nestjs.com/img/logo-small.svg',
+      customCss: '.swagger-ui .topbar { display: none }',
+    });
+    console.log(`\n📚 Swagger documentation available at: http://localhost:${port}/docs\n`);
   }
 
-  const port = Number(config.get<string>('PORT') ?? 3000);
   const host = process.env.HOST; // Se não definido, escuta em todas as interfaces compatíveis
   if (host) {
     await app.listen(port, host);
