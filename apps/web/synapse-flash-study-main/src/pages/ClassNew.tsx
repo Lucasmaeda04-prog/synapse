@@ -1,25 +1,45 @@
-import { useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
-import { createClass } from '@/lib/mockService';
+import { useState } from "react";
+import { Navigate, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { useCreateClass } from "@/hooks/api/useClasses";
+import { Loader2 } from "lucide-react";
 
 export default function ClassNew() {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
+  const [name, setName] = useState("");
+
+  const createClass = useCreateClass();
 
   if (!isAuthenticated) return <Navigate to="/login" />;
-  if (user?.role !== 'teacher') return <Navigate to="/dashboard" />;
+  if (user?.role !== "teacher") return <Navigate to="/dashboard" />;
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const klass = createClass({ name, description }, user!.id);
-    navigate(`/classes/${klass.id}`);
+
+    try {
+      await createClass.mutateAsync({
+        name,
+        // student_ids, org_id e school_id são opcionais
+        // Alunos podem ser adicionados depois na página de detalhes da turma
+      });
+
+      // Navegar para a lista de classes após criar
+      navigate("/classes");
+    } catch (error) {
+      // Erro já é tratado pelo hook (mostra toast)
+      console.error("Erro ao criar turma:", error);
+    }
   };
 
   return (
@@ -27,21 +47,45 @@ export default function ClassNew() {
       <Card className="shadow-card">
         <CardHeader>
           <CardTitle>Nova Turma</CardTitle>
-          <CardDescription>Crie uma turma e gerencie seus alunos</CardDescription>
+          <CardDescription>
+            Crie uma turma e gerencie seus alunos
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={onSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Nome</label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} required placeholder="Ex.: 1º Ano A" />
+            <div className="space-y-2">
+              <Label htmlFor="name">Nome da Turma *</Label>
+              <Input
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                placeholder="Ex.: 9º Ano A"
+                disabled={createClass.isPending}
+              />
+              <p className="text-xs text-muted-foreground">
+                Digite um nome descritivo para identificar a turma
+              </p>
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Descrição</label>
-              <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Breve descrição da turma" />
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" type="button" onClick={() => navigate('/classes')}>Cancelar</Button>
-              <Button variant="gradient" type="submit">Criar</Button>
+            <div className="flex justify-end gap-2 pt-4">
+              <Button
+                variant="outline"
+                type="button"
+                onClick={() => navigate("/classes")}
+                disabled={createClass.isPending}
+              >
+                Cancelar
+              </Button>
+              <Button
+                variant="gradient"
+                type="submit"
+                disabled={createClass.isPending || !name.trim()}
+              >
+                {createClass.isPending && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                {createClass.isPending ? "Criando..." : "Criar Turma"}
+              </Button>
             </div>
           </form>
         </CardContent>
@@ -49,4 +93,3 @@ export default function ClassNew() {
     </div>
   );
 }
-

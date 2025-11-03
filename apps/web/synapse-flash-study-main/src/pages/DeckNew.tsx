@@ -1,26 +1,55 @@
-import { useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
-import { createDeck } from '@/lib/mockService';
+import { useState } from "react";
+import { Navigate, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { useCreateDeck } from "@/hooks/api/useDecks";
+import { Loader2 } from "lucide-react";
 
 export default function DeckNew() {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [tags, setTags] = useState('');
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [tags, setTags] = useState("");
+
+  const createDeck = useCreateDeck();
 
   if (!isAuthenticated) return <Navigate to="/login" />;
-  if (user?.role !== 'teacher') return <Navigate to="/dashboard" />;
+  if (user?.role !== "teacher") return <Navigate to="/dashboard" />;
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newDeck = createDeck({ title, description, tags: tags.split(',').map(t => t.trim()).filter(Boolean) }, user!.id);
-    navigate(`/decks/${newDeck.id}`);
+
+    try {
+      const tagsArray = tags
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean);
+
+      await createDeck.mutateAsync({
+        title,
+        description: description || undefined,
+        tags: tagsArray.length > 0 ? tagsArray : undefined,
+        is_public: false,
+        // org_id e school_id são opcionais - podem ser adicionados depois quando tiver essa funcionalidade
+      });
+
+      // Navegar para a lista de decks após criar
+      navigate("/decks");
+    } catch (error) {
+      // Erro já é tratado pelo hook (mostra toast)
+      console.error("Erro ao criar deck:", error);
+    }
   };
 
   return (
@@ -32,21 +61,70 @@ export default function DeckNew() {
         </CardHeader>
         <CardContent>
           <form onSubmit={onSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Título</label>
-              <Input value={title} onChange={(e) => setTitle(e.target.value)} required placeholder="Ex.: Biologia - Sistema Nervoso" />
+            <div className="space-y-2">
+              <Label htmlFor="title">Título *</Label>
+              <Input
+                id="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                required
+                placeholder="Ex.: Matemática Básica"
+                disabled={createDeck.isPending}
+              />
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Descrição</label>
-              <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Breve descrição do conteúdo" />
+            <div className="space-y-2">
+              <Label htmlFor="description">
+                Descrição{" "}
+                <span className="text-muted-foreground font-normal">
+                  (opcional)
+                </span>
+              </Label>
+              <Textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Breve descrição do conteúdo do deck"
+                rows={3}
+                disabled={createDeck.isPending}
+              />
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Tags (separadas por vírgula)</label>
-              <Input value={tags} onChange={(e) => setTags(e.target.value)} placeholder="biologia, neuro" />
+            <div className="space-y-2">
+              <Label htmlFor="tags">
+                Tags{" "}
+                <span className="text-muted-foreground font-normal">
+                  (opcional, separadas por vírgula)
+                </span>
+              </Label>
+              <Input
+                id="tags"
+                value={tags}
+                onChange={(e) => setTags(e.target.value)}
+                placeholder="matemática, álgebra, básico"
+                disabled={createDeck.isPending}
+              />
+              <p className="text-xs text-muted-foreground">
+                Use tags para organizar e facilitar a busca dos seus decks
+              </p>
             </div>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" type="button" onClick={() => navigate('/decks')}>Cancelar</Button>
-              <Button variant="gradient" type="submit">Criar</Button>
+            <div className="flex justify-end gap-2 pt-4">
+              <Button
+                variant="outline"
+                type="button"
+                onClick={() => navigate("/decks")}
+                disabled={createDeck.isPending}
+              >
+                Cancelar
+              </Button>
+              <Button
+                variant="gradient"
+                type="submit"
+                disabled={createDeck.isPending || !title.trim()}
+              >
+                {createDeck.isPending && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                {createDeck.isPending ? "Criando..." : "Criar Deck"}
+              </Button>
             </div>
           </form>
         </CardContent>
@@ -54,4 +132,3 @@ export default function DeckNew() {
     </div>
   );
 }
-
