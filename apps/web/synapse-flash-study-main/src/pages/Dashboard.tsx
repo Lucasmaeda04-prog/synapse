@@ -13,7 +13,7 @@ export default function Dashboard() {
     return <Navigate to="/login" />;
   }
 
-  const isTeacher = user?.role === 'teacher';
+  const isTeacher = user?.role === 'TEACHER';
   const userDecks = isTeacher ? mockDecks.filter(d => d.teacherId === user.id) : mockDecks;
   const userClasses = isTeacher ? mockClasses.filter(c => c.teacherId === user.id) : mockClasses.filter(c => c.studentIds.includes(user?.id || ''));
 
