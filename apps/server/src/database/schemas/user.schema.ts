@@ -10,14 +10,17 @@ export type UserRole = 'ADMIN' | 'TEACHER' | 'STUDENT';
   timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' },
 })
 export class User {
+  @Prop({ required: true })
+  uid!: string; // Firebase UID
+
   @Prop({ required: true, enum: ['ADMIN', 'TEACHER', 'STUDENT'] })
   role!: UserRole;
 
-  @Prop({ required: true, unique: true, lowercase: true, trim: true })
+  @Prop({ required: true, lowercase: true, trim: true })
   email!: string;
 
-  @Prop({ required: true })
-  password_hash!: string;
+  @Prop({ required: false, default: '' })
+  password_hash?: string; // Opcional quando usando Firebase
 
   @Prop({ required: true, trim: true })
   name!: string;
@@ -32,4 +35,4 @@ export class User {
 export const UserSchema = SchemaFactory.createForClass(User);
 
 UserSchema.index({ email: 1 }, { unique: true });
-
+UserSchema.index({ uid: 1 }, { unique: true });
