@@ -37,7 +37,6 @@ export interface QueryDeckDto {
   limit?: number;
   query?: string;
   tags?: string;
-  mine?: boolean;
   sort?: string;
   order?: "asc" | "desc";
 }

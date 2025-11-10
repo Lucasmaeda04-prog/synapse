@@ -10,15 +10,27 @@ import {
   UseGuards,
   Request,
   ValidationPipe,
+  BadRequestException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { FirebaseAuthGuard } from '../auth/firebase-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { Types } from 'mongoose';
 import { ClassesService } from './classes.service';
 import { CreateClassDto } from './dto/create-class.dto';
 import { UpdateClassDto } from './dto/update-class.dto';
 import { QueryClassDto } from './dto/query-class.dto';
 import { AddStudentsDto, RemoveStudentsDto } from './dto/add-students.dto';
-import { ClassResponseDto, PaginatedClassesResponseDto } from './dto/class-response.dto';
+import {
+  ClassResponseDto,
+  PaginatedClassesResponseDto,
+} from './dto/class-response.dto';
 
 @ApiTags('classes')
 @Controller('classes')
@@ -29,53 +41,89 @@ export class ClassesController {
   constructor(private readonly classesService: ClassesService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Criar uma nova turma' })
-  @ApiResponse({ status: 201, description: 'Turma criada com sucesso', type: ClassResponseDto })
+  @UseGuards(FirebaseAuthGuard, RolesGuard)
+  @Roles('TEACHER', 'ADMIN')
+  @ApiOperation({ summary: 'Criar uma nova turma (apenas TEACHER/ADMIN)' })
+  @ApiResponse({
+    status: 201,
+    description: 'Turma criada com sucesso',
+    type: ClassResponseDto,
+  })
   @ApiResponse({ status: 400, description: 'Dados inválidos' })
   @ApiResponse({ status: 401, description: 'Não autorizado' })
+  @ApiResponse({ status: 403, description: 'Acesso negado' })
   @ApiBearerAuth()
   create(
     @Body(ValidationPipe) createClassDto: CreateClassDto,
     @Request() req: any,
   ): Promise<ClassResponseDto> {
-    // TODO: Implementar autenticação e pegar teacherId do req.user
-    const teacherId = req.user?.userId || this.TEMP_TEACHER_ID;
+    const teacherId = req.user?.userId;
+    if (!teacherId) {
+      throw new BadRequestException('Usuário não autenticado ou sem ID');
+    }
+    console.log('[ClassesController] Criando turma com teacherId:', teacherId, 'tipo:', typeof teacherId);
     return this.classesService.create(createClassDto, teacherId);
   }
 
   @Get()
-  @ApiOperation({ summary: 'Listar turmas do professor com filtros e paginação' })
-  @ApiResponse({ status: 200, description: 'Lista de turmas', type: PaginatedClassesResponseDto })
-  @ApiResponse({ status: 401, description: 'Não autorizado' })
+  @UseGuards(FirebaseAuthGuard)
   @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Listar turmas com filtros e paginação',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de turmas',
+    type: PaginatedClassesResponseDto,
+  })
+  @ApiResponse({ status: 401, description: 'Não autorizado' })
   findAll(
     @Query(ValidationPipe) queryDto: QueryClassDto,
     @Request() req: any,
   ): Promise<PaginatedClassesResponseDto> {
-    // TODO: Implementar autenticação e pegar teacherId do req.user
-    const teacherId = req.user?.userId || this.TEMP_TEACHER_ID;
-    return this.classesService.findAll(queryDto, teacherId);
+    const userRole = req.user?.role;
+    const userId = req.user?.userId;
+
+    console.log('[ClassesController] Listando turmas - userId:', userId, 'role:', userRole, 'tipo userId:', typeof userId);
+
+    return this.classesService.findAll(queryDto, userId, userRole);
   }
 
   @Get(':id')
+  @UseGuards(FirebaseAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Buscar uma turma por ID' })
-  @ApiResponse({ status: 200, description: 'Turma encontrada', type: ClassResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Turma encontrada',
+    type: ClassResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Turma não encontrada' })
   @ApiResponse({ status: 403, description: 'Acesso negado' })
   @ApiResponse({ status: 401, description: 'Não autorizado' })
-  @ApiBearerAuth()
   findOne(
     @Param('id') id: string,
     @Request() req: any,
   ): Promise<ClassResponseDto> {
-    // TODO: Implementar autenticação e pegar teacherId do req.user
-    const teacherId = req.user?.userId || this.TEMP_TEACHER_ID;
-    return this.classesService.findOne(id, teacherId);
+    const userId = req.user?.userId;
+    const userRole = req.user?.role;
+
+    if (!userId) {
+      throw new BadRequestException('Usuário não autenticado ou sem ID');
+    }
+
+    return this.classesService.findOne(id, userId, userRole);
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Atualizar uma turma' })
-  @ApiResponse({ status: 200, description: 'Turma atualizada com sucesso', type: ClassResponseDto })
+  @UseGuards(FirebaseAuthGuard, RolesGuard)
+  @Roles('TEACHER', 'ADMIN')
+  @ApiOperation({ summary: 'Atualizar uma turma (apenas TEACHER/ADMIN)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Turma atualizada com sucesso',
+    type: ClassResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Turma não encontrada' })
   @ApiResponse({ status: 403, description: 'Sem permissão para atualizar' })
   @ApiResponse({ status: 401, description: 'Não autorizado' })
@@ -85,13 +133,14 @@ export class ClassesController {
     @Body(ValidationPipe) updateClassDto: UpdateClassDto,
     @Request() req: any,
   ): Promise<ClassResponseDto> {
-    // TODO: Implementar autenticação e pegar teacherId do req.user
     const teacherId = req.user?.userId || this.TEMP_TEACHER_ID;
     return this.classesService.update(id, updateClassDto, teacherId);
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Deletar uma turma' })
+  @UseGuards(FirebaseAuthGuard, RolesGuard)
+  @Roles('TEACHER', 'ADMIN')
+  @ApiOperation({ summary: 'Deletar uma turma (apenas TEACHER/ADMIN)' })
   @ApiResponse({ status: 200, description: 'Turma deletada com sucesso' })
   @ApiResponse({ status: 404, description: 'Turma não encontrada' })
   @ApiResponse({ status: 403, description: 'Sem permissão para deletar' })
@@ -107,8 +156,14 @@ export class ClassesController {
   }
 
   @Post(':id/students')
-  @ApiOperation({ summary: 'Adicionar alunos à turma' })
-  @ApiResponse({ status: 200, description: 'Alunos adicionados com sucesso', type: ClassResponseDto })
+  @UseGuards(FirebaseAuthGuard, RolesGuard)
+  @Roles('TEACHER', 'ADMIN')
+  @ApiOperation({ summary: 'Adicionar alunos à turma (apenas TEACHER/ADMIN)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Alunos adicionados com sucesso',
+    type: ClassResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Turma não encontrada' })
   @ApiResponse({ status: 403, description: 'Sem permissão para modificar' })
   @ApiResponse({ status: 400, description: 'IDs de alunos inválidos' })
@@ -125,8 +180,14 @@ export class ClassesController {
   }
 
   @Delete(':id/students')
-  @ApiOperation({ summary: 'Remover alunos da turma' })
-  @ApiResponse({ status: 200, description: 'Alunos removidos com sucesso', type: ClassResponseDto })
+  @UseGuards(FirebaseAuthGuard, RolesGuard)
+  @Roles('TEACHER', 'ADMIN')
+  @ApiOperation({ summary: 'Remover alunos da turma (apenas TEACHER/ADMIN)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Alunos removidos com sucesso',
+    type: ClassResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Turma não encontrada' })
   @ApiResponse({ status: 403, description: 'Sem permissão para modificar' })
   @ApiResponse({ status: 400, description: 'IDs de alunos inválidos' })

@@ -30,15 +30,15 @@ async function bootstrap() {
       .setTitle('Synapse API')
       .setDescription(
         'API do Synapse - Plataforma de aprendizado com repetição espaçada\n\n' +
-        '## Recursos disponíveis\n' +
-        '- **Decks**: Criar e gerenciar decks de flashcards\n' +
-        '- **Classes**: Gerenciar turmas e alunos\n' +
-        '- **Cards**: Gerenciar cards dentro dos decks (em breve)\n' +
-        '- **Study**: Sistema de estudo com repetição espaçada (em breve)\n' +
-        '- **Reports**: Relatórios de progresso (em breve)\n\n' +
-        '## Autenticação\n' +
-        'A autenticação será implementada via JWT Bearer Token.\n' +
-        'Por enquanto, as rotas usam IDs temporários para testes.'
+          '## Recursos disponíveis\n' +
+          '- **Decks**: Criar e gerenciar decks de flashcards\n' +
+          '- **Classes**: Gerenciar turmas e alunos\n' +
+          '- **Cards**: Gerenciar cards dentro dos decks (em breve)\n' +
+          '- **Study**: Sistema de estudo com repetição espaçada (em breve)\n' +
+          '- **Reports**: Relatórios de progresso (em breve)\n\n' +
+          '## Autenticação\n' +
+          'A autenticação será implementada via JWT Bearer Token.\n' +
+          'Por enquanto, as rotas usam IDs temporários para testes.',
       )
       .setVersion('0.1.0')
       .addTag('decks', 'Operações relacionadas a decks de flashcards')
@@ -60,7 +60,9 @@ async function bootstrap() {
       customfavIcon: 'https://nestjs.com/img/logo-small.svg',
       customCss: '.swagger-ui .topbar { display: none }',
     });
-    console.log(`\n📚 Swagger documentation available at: http://localhost:${port}/docs\n`);
+    console.log(
+      `\n📚 Swagger documentation available at: http://localhost:${port}/docs\n`,
+    );
   }
 
   const host = process.env.HOST; // Se não definido, escuta em todas as interfaces compatíveis

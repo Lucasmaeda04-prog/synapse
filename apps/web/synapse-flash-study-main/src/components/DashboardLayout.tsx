@@ -19,14 +19,33 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     navigate('/login');
   };
 
-  const isTeacher = user?.role === 'teacher';
+  const getRoleLabel = () => {
+    if (!user?.role) return 'Usuário';
+    switch (user.role) {
+      case 'ADMIN':
+        return 'Administrador';
+      case 'TEACHER':
+        return 'Professor';
+      case 'STUDENT':
+        return 'Aluno';
+      default:
+        return 'Usuário';
+    }
+  };
 
-  const navItems = [
+  const allNavItems = [
     { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/decks', label: 'Decks', icon: BookOpen },
     { to: '/classes', label: 'Turmas', icon: Users },
     { to: '/reports', label: 'Relatórios', icon: TrendingUp },
   ];
+
+  const navItems = allNavItems.filter((item) => {
+    if (item.to === '/reports') {
+      return user?.role === 'TEACHER' || user?.role === 'ADMIN';
+    }
+    return true;
+  });
 
   return (
     <div className="min-h-screen bg-background">
@@ -60,7 +79,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               <div className="text-right hidden sm:block">
                 <p className="text-sm font-medium">{user?.name}</p>
                 <p className="text-xs text-muted-foreground">
-                  {isTeacher ? 'Professor' : 'Aluno'}
+                  {getRoleLabel()}
                 </p>
               </div>
               <Button variant="outline" size="icon" onClick={handleLogout}>

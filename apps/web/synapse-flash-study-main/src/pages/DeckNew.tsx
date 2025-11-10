@@ -25,7 +25,7 @@ export default function DeckNew() {
   const createDeck = useCreateDeck();
 
   if (!isAuthenticated) return <Navigate to="/login" />;
-  if (user?.role !== "teacher") return <Navigate to="/dashboard" />;
+  if (user?.role !== "TEACHER" && user?.role !== "ADMIN") return <Navigate to="/dashboard" />;
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,13 +41,10 @@ export default function DeckNew() {
         description: description || undefined,
         tags: tagsArray.length > 0 ? tagsArray : undefined,
         is_public: false,
-        // org_id e school_id são opcionais - podem ser adicionados depois quando tiver essa funcionalidade
       });
 
-      // Navegar para a lista de decks após criar
       navigate("/decks");
     } catch (error) {
-      // Erro já é tratado pelo hook (mostra toast)
       console.error("Erro ao criar deck:", error);
     }
   };

@@ -3,10 +3,12 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ClassesController } from './classes.controller';
 import { ClassesService } from './classes.service';
 import { Class, ClassSchema } from '../database/schemas/class.schema';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Class.name, schema: ClassSchema }]),
+    AuthModule,
   ],
   controllers: [ClassesController],
   providers: [ClassesService],

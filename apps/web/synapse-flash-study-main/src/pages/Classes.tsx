@@ -24,7 +24,7 @@ export default function Classes() {
     return <Navigate to="/login" />;
   }
 
-  const isTeacher = user?.role === "teacher";
+  const isTeacher = user?.role === "TEACHER" || user?.role === "ADMIN";
 
   // Buscar classes da API - movido para ANTES dos early returns de loading/error
   // para evitar que o componente re-renderize e perca o foco do input
@@ -33,8 +33,12 @@ export default function Classes() {
     page: 1,
     limit: 20,
   });
-
-  const classes = data?.data || [];
+  
+  // Filtrar classes: professores veem suas turmas, alunos veem turmas onde estão matriculados
+  const allClasses = data?.data || [];
+  const classes = isTeacher 
+    ? allClasses 
+    : allClasses.filter(c => c.student_ids?.includes(user?.id || ''));
 
   // Loading state - renderizado SEM incluir os hooks novamente
   if (isLoading) {

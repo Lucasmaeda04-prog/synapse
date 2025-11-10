@@ -12,7 +12,7 @@ export default function Reports() {
   if (!isAuthenticated) return <Navigate to="/login" />;
   if (!user) return null;
 
-  const isTeacher = user.role === 'teacher';
+  const isTeacher = user.role === 'TEACHER' || user.role === 'ADMIN';
 
   // KPIs
   const { kpis, chartData, chartConfig, chartTitle, chartDesc } = useMemo(() => {

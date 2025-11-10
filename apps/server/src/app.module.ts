@@ -6,6 +6,9 @@ import { AppService } from './app.service';
 import { HealthController } from './health.controller';
 import { HealthService } from './health.service';
 import { DatabaseModule } from './database/database.module';
+import { AuthModule } from './auth/auth.module';
+import { AuthController } from './auth/auth.controller';
+import { UsersModule } from './users/users.module';
 import { DecksModule } from './decks/decks.module';
 import { ClassesModule } from './classes/classes.module';
 
@@ -23,10 +26,12 @@ import { ClassesModule } from './classes/classes.module';
       }),
     }),
     DatabaseModule,
+    AuthModule,
+    UsersModule,
     DecksModule,
     ClassesModule,
   ],
-  controllers: [AppController, HealthController],
+  controllers: [AppController, HealthController, AuthController],
   providers: [AppService, HealthService],
 })
 export class AppModule {}

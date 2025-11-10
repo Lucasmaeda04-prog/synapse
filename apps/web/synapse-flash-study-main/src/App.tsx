@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Decks from "./pages/Decks";
@@ -29,15 +30,62 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/dashboard" element={<DashboardLayout><Dashboard /></DashboardLayout>} />
-            <Route path="/decks" element={<DashboardLayout><Decks /></DashboardLayout>} />
-            <Route path="/decks/new" element={<DashboardLayout><DeckNew /></DashboardLayout>} />
-            <Route path="/decks/:deckId" element={<DashboardLayout><DeckDetail /></DashboardLayout>} />
-            <Route path="/classes" element={<DashboardLayout><Classes /></DashboardLayout>} />
-            <Route path="/classes/new" element={<DashboardLayout><ClassNew /></DashboardLayout>} />
-            <Route path="/classes/:classId" element={<DashboardLayout><ClassDetail /></DashboardLayout>} />
-            <Route path="/study/:deckId" element={<DashboardLayout><Study /></DashboardLayout>} />
-            <Route path="/reports" element={<DashboardLayout><Reports /></DashboardLayout>} />
+            
+            {/* Rotas protegidas */}
+            <Route path="/dashboard" element={
+              <ProtectedRoute>
+                <DashboardLayout><Dashboard /></DashboardLayout>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/decks" element={
+              <ProtectedRoute>
+                <DashboardLayout><Decks /></DashboardLayout>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/decks/new" element={
+              <ProtectedRoute requiredRole="TEACHER">
+                <DashboardLayout><DeckNew /></DashboardLayout>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/decks/:deckId" element={
+              <ProtectedRoute>
+                <DashboardLayout><DeckDetail /></DashboardLayout>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/classes" element={
+              <ProtectedRoute>
+                <DashboardLayout><Classes /></DashboardLayout>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/classes/new" element={
+              <ProtectedRoute requiredRole="TEACHER">
+                <DashboardLayout><ClassNew /></DashboardLayout>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/classes/:classId" element={
+              <ProtectedRoute>
+                <DashboardLayout><ClassDetail /></DashboardLayout>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/study/:deckId" element={
+              <ProtectedRoute>
+                <DashboardLayout><Study /></DashboardLayout>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/reports" element={
+              <ProtectedRoute requiredRole="TEACHER">
+                <DashboardLayout><Reports /></DashboardLayout>
+              </ProtectedRoute>
+            } />
+            
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

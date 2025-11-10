@@ -24,4 +24,3 @@ export class Class {
 export const ClassSchema = SchemaFactory.createForClass(Class);
 
 ClassSchema.index({ teacher_id: 1, created_at: -1 });
-

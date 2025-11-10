@@ -20,19 +20,17 @@ export default function Decks() {
   const { user, isAuthenticated } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" />;
-  }
+  const isTeacher = user?.role === "TEACHER" || user?.role === "ADMIN";
 
-  const isTeacher = user?.role === "teacher";
-
-  // Buscar decks da API
   const { data, isLoading, isError, error } = useDecks({
-    mine: isTeacher, // Se for professor, busca apenas seus decks
     query: searchTerm || undefined,
     page: 1,
     limit: 20,
   });
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />;
+  }
 
   const decks = data?.data || [];
 
@@ -99,7 +97,7 @@ export default function Decks() {
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
             Erro ao carregar decks:{" "}
-            {(error as any)?.response?.data?.message || "Erro desconhecido"}
+            {(error as { response?: { data?: { message?: string } } })?.response?.data?.message || "Erro desconhecido"}
           </AlertDescription>
         </Alert>
       )}

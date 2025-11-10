@@ -38,4 +38,3 @@ export const DeckSchema = SchemaFactory.createForClass(Deck);
 DeckSchema.index({ owner_id: 1, created_at: -1 });
 // Text index combinando campos relevantes para busca
 DeckSchema.index({ title: 'text', description: 'text', tags: 'text' });
-

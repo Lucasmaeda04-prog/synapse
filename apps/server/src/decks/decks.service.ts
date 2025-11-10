@@ -1,19 +1,37 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Deck, DeckDocument } from '../database/schemas/deck.schema';
+import {
+  Assignment,
+  AssignmentDocument,
+} from '../database/schemas/assignment.schema';
+import { Class, ClassDocument } from '../database/schemas/class.schema';
 import { CreateDeckDto } from './dto/create-deck.dto';
 import { UpdateDeckDto } from './dto/update-deck.dto';
 import { QueryDeckDto } from './dto/query-deck.dto';
-import { PaginatedDecksResponseDto, DeckResponseDto } from './dto/deck-response.dto';
+import {
+  PaginatedDecksResponseDto,
+  DeckResponseDto,
+} from './dto/deck-response.dto';
 
 @Injectable()
 export class DecksService {
   constructor(
     @InjectModel(Deck.name) private deckModel: Model<DeckDocument>,
+    @InjectModel(Assignment.name)
+    private assignmentModel: Model<AssignmentDocument>,
+    @InjectModel(Class.name) private classModel: Model<ClassDocument>,
   ) {}
 
-  async create(createDeckDto: CreateDeckDto, ownerId: string): Promise<DeckResponseDto> {
+  async create(
+    createDeckDto: CreateDeckDto,
+    ownerId: string,
+  ): Promise<DeckResponseDto> {
     const deck = new this.deckModel({
       ...createDeckDto,
       owner_id: new Types.ObjectId(ownerId),
@@ -24,14 +42,79 @@ export class DecksService {
     return this.toResponseDto(savedDeck);
   }
 
-  async findAll(queryDto: QueryDeckDto, userId?: string): Promise<PaginatedDecksResponseDto> {
-    const { page = 1, limit = 20, query, tags, mine, sort = 'created_at', order = 'desc' } = queryDto;
+  async findAll(
+    queryDto: QueryDeckDto,
+    userId?: string,
+    userRole?: string,
+  ): Promise<PaginatedDecksResponseDto> {
+    const {
+      page = 1,
+      limit = 20,
+      query,
+      tags,
+      sort = 'created_at',
+      order = 'desc',
+    } = queryDto;
 
     const filter: any = {};
+    let allowedDeckIds: Types.ObjectId[] | undefined;
 
-    // Filtro: apenas meus decks
-    if (mine && userId) {
+    // Para professores/admins: sempre retornar apenas seus decks
+    if (userRole === 'TEACHER' || userRole === 'ADMIN') {
+      if (!userId) {
+        // Se não tiver userId, retornar vazio (não deveria acontecer, mas por segurança)
+        return {
+          data: [],
+          total: 0,
+          page,
+          limit,
+          totalPages: 0,
+        };
+      }
       filter.owner_id = new Types.ObjectId(userId);
+    }
+    // Para alunos: buscar apenas decks atribuídos a ele ou suas turmas
+    else if (userRole === 'STUDENT' && userId) {
+      // Buscar turmas onde o aluno está
+      const studentClasses = await this.classModel
+        .find({ student_ids: new Types.ObjectId(userId) })
+        .select('_id')
+        .lean()
+        .exec();
+
+      const classIds = studentClasses.map((c) => c._id);
+
+      // Buscar assignments:
+      // 1. Atribuídos diretamente ao aluno (student_id)
+      // 2. Atribuídos às turmas onde o aluno está (class_id)
+      const assignmentFilter: any = {
+        $or: [{ student_id: new Types.ObjectId(userId) }],
+      };
+
+      if (classIds.length > 0) {
+        assignmentFilter.$or.push({ class_id: { $in: classIds } });
+      }
+
+      const assignments = await this.assignmentModel
+        .find(assignmentFilter)
+        .select('deck_id')
+        .lean()
+        .exec();
+
+      allowedDeckIds = assignments.map((a) => a.deck_id);
+
+      // Se não houver assignments, retornar array vazio
+      if (allowedDeckIds.length === 0) {
+        return {
+          data: [],
+          total: 0,
+          page,
+          limit,
+          totalPages: 0,
+        };
+      }
+
+      filter._id = { $in: allowedDeckIds };
     }
 
     // Filtro: busca textual
@@ -41,7 +124,7 @@ export class DecksService {
 
     // Filtro: tags
     if (tags) {
-      const tagArray = tags.split(',').map(t => t.trim());
+      const tagArray = tags.split(',').map((t) => t.trim());
       filter.tags = { $in: tagArray };
     }
 
@@ -62,7 +145,7 @@ export class DecksService {
     ]);
 
     return {
-      data: data.map(deck => this.toResponseDto(deck)),
+      data: data.map((deck) => this.toResponseDto(deck)),
       total,
       page,
       limit,
@@ -89,7 +172,11 @@ export class DecksService {
     return this.toResponseDto(deck);
   }
 
-  async update(id: string, updateDeckDto: UpdateDeckDto, userId: string): Promise<DeckResponseDto> {
+  async update(
+    id: string,
+    updateDeckDto: UpdateDeckDto,
+    userId: string,
+  ): Promise<DeckResponseDto> {
     if (!Types.ObjectId.isValid(id)) {
       throw new NotFoundException(`Deck with ID ${id} not found`);
     }
@@ -102,7 +189,9 @@ export class DecksService {
 
     // Apenas o proprietário pode editar
     if (deck.owner_id.toString() !== userId) {
-      throw new ForbiddenException('You do not have permission to update this deck');
+      throw new ForbiddenException(
+        'You do not have permission to update this deck',
+      );
     }
 
     Object.assign(deck, updateDeckDto);
@@ -124,7 +213,9 @@ export class DecksService {
 
     // Apenas o proprietário pode deletar
     if (deck.owner_id.toString() !== userId) {
-      throw new ForbiddenException('You do not have permission to delete this deck');
+      throw new ForbiddenException(
+        'You do not have permission to delete this deck',
+      );
     }
 
     await this.deckModel.findByIdAndDelete(id).exec();
@@ -133,17 +224,15 @@ export class DecksService {
   }
 
   async incrementCardsCount(deckId: string): Promise<void> {
-    await this.deckModel.findByIdAndUpdate(
-      deckId,
-      { $inc: { cards_count: 1 } },
-    ).exec();
+    await this.deckModel
+      .findByIdAndUpdate(deckId, { $inc: { cards_count: 1 } })
+      .exec();
   }
 
   async decrementCardsCount(deckId: string): Promise<void> {
-    await this.deckModel.findByIdAndUpdate(
-      deckId,
-      { $inc: { cards_count: -1 } },
-    ).exec();
+    await this.deckModel
+      .findByIdAndUpdate(deckId, { $inc: { cards_count: -1 } })
+      .exec();
   }
 
   private toResponseDto(deck: any): DeckResponseDto {

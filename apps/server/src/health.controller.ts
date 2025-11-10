@@ -18,9 +18,9 @@ export class HealthController {
         status: { type: 'string', example: 'ok' },
         db: { type: 'string', example: 'up' },
         dbState: { type: 'string', example: 'connected' },
-        timestamp: { type: 'string', example: '2025-01-27T10:30:00.000Z' }
-      }
-    }
+        timestamp: { type: 'string', example: '2025-01-27T10:30:00.000Z' },
+      },
+    },
   })
   async health() {
     const dbOk = await this.healthService.ping();
