@@ -74,8 +74,10 @@ export class DecksController {
     @Query(ValidationPipe) queryDto: QueryDeckDto,
     @Request() req: any,
   ): Promise<PaginatedDecksResponseDto> {
-    const userId = queryDto.mine ? req.user?.userId || undefined : undefined;
-    return this.decksService.findAll(queryDto, userId);
+    const userRole = req.user?.role;
+    const userId = req.user?.userId;
+
+    return this.decksService.findAll(queryDto, userId, userRole);
   }
 
   @Get(':id')

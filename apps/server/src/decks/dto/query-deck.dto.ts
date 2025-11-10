@@ -1,7 +1,6 @@
 import {
   IsOptional,
   IsString,
-  IsBoolean,
   IsNumber,
   Min,
   Max,
@@ -10,11 +9,6 @@ import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class QueryDeckDto {
-  @ApiProperty({ description: 'Buscar apenas decks próprios', required: false })
-  @IsOptional()
-  @IsBoolean()
-  @Type(() => Boolean)
-  mine?: boolean;
 
   @ApiProperty({
     description: 'Texto para busca',

@@ -11,22 +11,14 @@ import { Skeleton } from '@/components/ui/skeleton';
 export default function Dashboard() {
   const { user, isAuthenticated } = useAuth();
 
+  const { data: decksData, isLoading: decksLoading, isError: decksError } = useDecks();
+  const { data: classesData, isLoading: classesLoading, isError: classesError } = useClasses();
+
   if (!isAuthenticated) {
     return <Navigate to="/login" />;
   }
 
   const isTeacher = user?.role === 'TEACHER' || user?.role === 'ADMIN';
-  
-  // Buscar decks do backend
-  const { data: decksData, isLoading: decksLoading, isError: decksError } = useDecks({
-    mine: isTeacher, // Se for professor, buscar apenas seus decks
-    limit: 100, // Buscar muitos para ter estatísticas completas
-  });
-
-  // Buscar classes do backend
-  const { data: classesData, isLoading: classesLoading, isError: classesError } = useClasses({
-    limit: 100, // Buscar muitas para ter estatísticas completas
-  });
 
   const decks = decksData?.data || [];
   const classes = classesData?.data || [];
