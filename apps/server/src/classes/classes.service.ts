@@ -34,19 +34,24 @@ export class ClassesService {
         return new Types.ObjectId(id);
       }) || [];
 
+    const teacherObjectId = new Types.ObjectId(teacherId);
+    console.log('[ClassesService] Criando turma - teacherId (string):', teacherId, 'teacherObjectId:', teacherObjectId.toString());
+
     const classEntity = new this.classModel({
       ...createClassDto,
-      teacher_id: new Types.ObjectId(teacherId),
+      teacher_id: teacherObjectId,
       student_ids: studentIds,
     });
 
     const savedClass = await classEntity.save();
+    console.log('[ClassesService] Turma criada - _id:', savedClass._id.toString(), 'teacher_id:', savedClass.teacher_id.toString());
     return this.toResponseDto(savedClass);
   }
 
   async findAll(
     queryDto: QueryClassDto,
-    teacherId?: string,
+    userId?: string,
+    userRole?: string,
   ): Promise<PaginatedClassesResponseDto> {
     const {
       page = 1,
@@ -58,14 +63,37 @@ export class ClassesService {
 
     const filter: any = {};
 
-    // Se teacherId for fornecido, filtrar apenas turmas desse professor
-    // Caso contrário, retornar todas as turmas (para alunos verem todas e filtrar no frontend)
-    if (teacherId) {
-      filter.teacher_id = new Types.ObjectId(teacherId);
+    // Para professores/admins: sempre retornar apenas suas turmas (teacher_id)
+    if (userRole === 'TEACHER' || userRole === 'ADMIN') {
+      if (!userId) {
+        // Se não tiver userId, retornar vazio (não deveria acontecer, mas por segurança)
+        return {
+          data: [],
+          total: 0,
+          page,
+          limit,
+          totalPages: 0,
+        };
+      }
+      filter.teacher_id = new Types.ObjectId(userId);
+      console.log('[ClassesService] Filtrando por teacher_id:', userId, 'ObjectId:', filter.teacher_id.toString());
+    }
+    else if (userRole === 'STUDENT') {
+      if (!userId) {
+        return {
+          data: [],
+          total: 0,
+          page,
+          limit,
+          totalPages: 0,
+        };
+      }
+      // MongoDB verifica automaticamente se o ObjectId está no array student_ids
+      filter.student_ids = new Types.ObjectId(userId);
     }
 
     // Filtro: busca textual no nome
-    if (query) {
+    if (query && query !== 'undefined' && query.trim() !== '') {
       filter.name = { $regex: query, $options: 'i' };
     }
 
@@ -73,6 +101,16 @@ export class ClassesService {
     const sortOrder = order === 'asc' ? 1 : -1;
     const sortField: any = {};
     sortField[sort] = sortOrder;
+
+    // Converter teacher_id para ObjectId se existir (JSON.stringify não mostra ObjectId corretamente)
+    const filterForLog: any = { ...filter };
+    if (filter.teacher_id) {
+      filterForLog.teacher_id = filter.teacher_id.toString();
+    }
+    if (filter.student_ids) {
+      filterForLog.student_ids = filter.student_ids.toString();
+    }
+    console.log('[ClassesService] Filter aplicado:', JSON.stringify(filterForLog, null, 2));
 
     const [data, total] = await Promise.all([
       this.classModel
@@ -85,6 +123,11 @@ export class ClassesService {
       this.classModel.countDocuments(filter).exec(),
     ]);
 
+    console.log('[ClassesService] Resultado:', { total, returned: data.length });
+    if (data.length > 0) {
+      console.log('[ClassesService] Primeira turma encontrada - _id:', data[0]._id, 'teacher_id:', data[0].teacher_id);
+    }
+
     return {
       data: data.map((classEntity) => this.toResponseDto(classEntity)),
       total,
@@ -94,7 +137,11 @@ export class ClassesService {
     };
   }
 
-  async findOne(id: string, teacherId: string): Promise<ClassResponseDto> {
+  async findOne(
+    id: string,
+    userId: string,
+    userRole?: string,
+  ): Promise<ClassResponseDto> {
     if (!Types.ObjectId.isValid(id)) {
       throw new NotFoundException(`Class with ID ${id} not found`);
     }
@@ -105,8 +152,22 @@ export class ClassesService {
       throw new NotFoundException(`Class with ID ${id} not found`);
     }
 
-    // Apenas o professor proprietário pode visualizar
-    if (classEntity.teacher_id.toString() !== teacherId) {
+    // Verificar acesso baseado no role
+    // Professores/Admins: podem ver se são o dono (teacher_id)
+    // Alunos: podem ver se estão na turma (student_ids)
+    if (userRole === 'TEACHER' || userRole === 'ADMIN') {
+      if (classEntity.teacher_id.toString() !== userId) {
+        throw new ForbiddenException('You do not have access to this class');
+      }
+    } else if (userRole === 'STUDENT') {
+      const isStudentInClass = classEntity.student_ids.some(
+        (studentId) => studentId.toString() === userId,
+      );
+      if (!isStudentInClass) {
+        throw new ForbiddenException('You do not have access to this class');
+      }
+    } else {
+      // Role desconhecido ou não fornecido
       throw new ForbiddenException('You do not have access to this class');
     }
 

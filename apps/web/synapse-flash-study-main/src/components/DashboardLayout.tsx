@@ -33,12 +33,19 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   };
 
-  const navItems = [
+  const allNavItems = [
     { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/decks', label: 'Decks', icon: BookOpen },
     { to: '/classes', label: 'Turmas', icon: Users },
     { to: '/reports', label: 'Relatórios', icon: TrendingUp },
   ];
+
+  const navItems = allNavItems.filter((item) => {
+    if (item.to === '/reports') {
+      return user?.role === 'TEACHER' || user?.role === 'ADMIN';
+    }
+    return true;
+  });
 
   return (
     <div className="min-h-screen bg-background">

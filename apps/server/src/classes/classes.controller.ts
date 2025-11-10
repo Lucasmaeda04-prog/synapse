@@ -10,6 +10,7 @@ import {
   UseGuards,
   Request,
   ValidationPipe,
+  BadRequestException,
 } from '@nestjs/common';
 import { FirebaseAuthGuard } from '../auth/firebase-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
@@ -56,8 +57,11 @@ export class ClassesController {
     @Body(ValidationPipe) createClassDto: CreateClassDto,
     @Request() req: any,
   ): Promise<ClassResponseDto> {
-    // TODO: Implementar autenticação e pegar teacherId do req.user
-    const teacherId = req.user?.userId || this.TEMP_TEACHER_ID;
+    const teacherId = req.user?.userId;
+    if (!teacherId) {
+      throw new BadRequestException('Usuário não autenticado ou sem ID');
+    }
+    console.log('[ClassesController] Criando turma com teacherId:', teacherId, 'tipo:', typeof teacherId);
     return this.classesService.create(createClassDto, teacherId);
   }
 
@@ -78,13 +82,16 @@ export class ClassesController {
     @Request() req: any,
   ): Promise<PaginatedClassesResponseDto> {
     const userRole = req.user?.role;
-    const teacherId = (userRole === 'TEACHER' || userRole === 'ADMIN') 
-      ? req.user?.userId 
-      : undefined;
-    return this.classesService.findAll(queryDto, teacherId);
+    const userId = req.user?.userId;
+
+    console.log('[ClassesController] Listando turmas - userId:', userId, 'role:', userRole, 'tipo userId:', typeof userId);
+
+    return this.classesService.findAll(queryDto, userId, userRole);
   }
 
   @Get(':id')
+  @UseGuards(FirebaseAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Buscar uma turma por ID' })
   @ApiResponse({
     status: 200,
@@ -94,14 +101,18 @@ export class ClassesController {
   @ApiResponse({ status: 404, description: 'Turma não encontrada' })
   @ApiResponse({ status: 403, description: 'Acesso negado' })
   @ApiResponse({ status: 401, description: 'Não autorizado' })
-  @ApiBearerAuth()
   findOne(
     @Param('id') id: string,
     @Request() req: any,
   ): Promise<ClassResponseDto> {
-    // TODO: Implementar autenticação e pegar teacherId do req.user
-    const teacherId = req.user?.userId || this.TEMP_TEACHER_ID;
-    return this.classesService.findOne(id, teacherId);
+    const userId = req.user?.userId;
+    const userRole = req.user?.role;
+
+    if (!userId) {
+      throw new BadRequestException('Usuário não autenticado ou sem ID');
+    }
+
+    return this.classesService.findOne(id, userId, userRole);
   }
 
   @Patch(':id')
@@ -122,7 +133,6 @@ export class ClassesController {
     @Body(ValidationPipe) updateClassDto: UpdateClassDto,
     @Request() req: any,
   ): Promise<ClassResponseDto> {
-    // TODO: Implementar autenticação e pegar teacherId do req.user
     const teacherId = req.user?.userId || this.TEMP_TEACHER_ID;
     return this.classesService.update(id, updateClassDto, teacherId);
   }
