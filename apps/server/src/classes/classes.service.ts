@@ -46,7 +46,7 @@ export class ClassesService {
 
   async findAll(
     queryDto: QueryClassDto,
-    teacherId: string,
+    teacherId?: string,
   ): Promise<PaginatedClassesResponseDto> {
     const {
       page = 1,
@@ -56,9 +56,13 @@ export class ClassesService {
       order = 'desc',
     } = queryDto;
 
-    const filter: any = {
-      teacher_id: new Types.ObjectId(teacherId),
-    };
+    const filter: any = {};
+
+    // Se teacherId for fornecido, filtrar apenas turmas desse professor
+    // Caso contrário, retornar todas as turmas (para alunos verem todas e filtrar no frontend)
+    if (teacherId) {
+      filter.teacher_id = new Types.ObjectId(teacherId);
+    }
 
     // Filtro: busca textual no nome
     if (query) {

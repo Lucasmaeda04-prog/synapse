@@ -61,12 +61,15 @@ export class DecksController {
   }
 
   @Get()
+  @UseGuards(FirebaseAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Listar decks com filtros e paginação' })
   @ApiResponse({
     status: 200,
     description: 'Lista de decks',
     type: PaginatedDecksResponseDto,
   })
+  @ApiResponse({ status: 401, description: 'Não autorizado' })
   findAll(
     @Query(ValidationPipe) queryDto: QueryDeckDto,
     @Request() req: any,

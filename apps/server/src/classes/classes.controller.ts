@@ -62,8 +62,10 @@ export class ClassesController {
   }
 
   @Get()
+  @UseGuards(FirebaseAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({
-    summary: 'Listar turmas do professor com filtros e paginação',
+    summary: 'Listar turmas com filtros e paginação',
   })
   @ApiResponse({
     status: 200,
@@ -71,13 +73,14 @@ export class ClassesController {
     type: PaginatedClassesResponseDto,
   })
   @ApiResponse({ status: 401, description: 'Não autorizado' })
-  @ApiBearerAuth()
   findAll(
     @Query(ValidationPipe) queryDto: QueryClassDto,
     @Request() req: any,
   ): Promise<PaginatedClassesResponseDto> {
-    // TODO: Implementar autenticação e pegar teacherId do req.user
-    const teacherId = req.user?.userId || this.TEMP_TEACHER_ID;
+    const userRole = req.user?.role;
+    const teacherId = (userRole === 'TEACHER' || userRole === 'ADMIN') 
+      ? req.user?.userId 
+      : undefined;
     return this.classesService.findAll(queryDto, teacherId);
   }
 

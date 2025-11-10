@@ -20,19 +20,18 @@ export default function Decks() {
   const { user, isAuthenticated } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" />;
-  }
+  const isTeacher = user?.role === "TEACHER" || user?.role === "ADMIN";
 
-  const isTeacher = user?.role === "teacher";
-
-  // Buscar decks da API
   const { data, isLoading, isError, error } = useDecks({
-    mine: isTeacher, // Se for professor, busca apenas seus decks
+    mine: isTeacher,
     query: searchTerm || undefined,
     page: 1,
     limit: 20,
   });
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />;
+  }
 
   const decks = data?.data || [];
 
