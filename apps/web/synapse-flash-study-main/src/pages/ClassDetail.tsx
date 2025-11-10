@@ -95,7 +95,7 @@ export default function ClassDetail() {
   }
 
   // TODO: Quando integrar auth real, validar: klass.teacher_id === user?.id
-  const canEdit = user?.role === "teacher"; // Por enquanto, qualquer professor pode editar
+  const canEdit = user?.role === "TEACHER"; // Por enquanto, qualquer professor pode editar
 
   const handleEdit = () => {
     setEditName(klass.name);

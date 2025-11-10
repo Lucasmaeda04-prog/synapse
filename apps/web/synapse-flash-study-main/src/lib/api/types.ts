@@ -98,6 +98,30 @@ export interface PaginatedClassesResponse {
   totalPages: number;
 }
 
+// ============= CARDS =============
+
+export interface Card {
+  _id: string;
+  deck_id: string;
+  front: string;
+  back: string;
+  hints: string[];
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface CreateCardDto {
+  front: string;
+  back: string;
+  hints?: string[];
+}
+
+export interface UpdateCardDto {
+  front?: string;
+  back?: string;
+  hints?: string[];
+}
+
 // ============= ERROR TYPES =============
 
 export interface ApiError {

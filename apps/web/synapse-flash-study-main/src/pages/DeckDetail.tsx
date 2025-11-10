@@ -26,7 +26,13 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useDeck, useUpdateDeck, useDeleteDeck } from "@/hooks/api/useDecks";
-import { AlertCircle, Loader2, Pencil, Trash2 } from "lucide-react";
+import {
+  useCards,
+  useCreateCard,
+  useUpdateCard,
+  useDeleteCard,
+} from "@/hooks/api/useCards";
+import { AlertCircle, Loader2, Pencil, Trash2, Plus, X } from "lucide-react";
 
 export default function DeckDetail() {
   const { deckId } = useParams();
@@ -39,10 +45,31 @@ export default function DeckDetail() {
   const [editDescription, setEditDescription] = useState("");
   const [editTags, setEditTags] = useState("");
 
+  // Estados para cards
+  const [isAddingCard, setIsAddingCard] = useState(false);
+  const [cardFront, setCardFront] = useState("");
+  const [cardBack, setCardBack] = useState("");
+  const [cardHints, setCardHints] = useState("");
+
+  const [editingCardId, setEditingCardId] = useState<string | null>(null);
+  const [editCardFront, setEditCardFront] = useState("");
+  const [editCardBack, setEditCardBack] = useState("");
+  const [editCardHints, setEditCardHints] = useState("");
+
   // Buscar deck da API
   const { data: deck, isLoading, isError, error } = useDeck(deckId || "");
   const updateDeck = useUpdateDeck();
   const deleteDeck = useDeleteDeck();
+
+  // Buscar cards do deck
+  const {
+    data: cards,
+    isLoading: isLoadingCards,
+    isError: isErrorCards,
+  } = useCards(deckId || "");
+  const createCard = useCreateCard(deckId || "");
+  const updateCard = useUpdateCard(deckId || "");
+  const deleteCard = useDeleteCard(deckId || "");
 
   if (!isAuthenticated) return <Navigate to="/login" />;
 
@@ -79,7 +106,7 @@ export default function DeckDetail() {
   }
 
   // TODO: Quando integrar auth real, validar: deck.owner_id === user?.id
-  const canEdit = user?.role === "teacher"; // Por enquanto, qualquer professor pode editar
+  const canEdit = user?.role === "TEACHER"; // Por enquanto, qualquer professor pode editar
 
   const handleEdit = () => {
     setEditTitle(deck.title);
@@ -127,6 +154,80 @@ export default function DeckDetail() {
     setEditTitle("");
     setEditDescription("");
     setEditTags("");
+  };
+
+  // Handlers para cards
+  const handleAddCard = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!deckId || !cardFront.trim() || !cardBack.trim()) return;
+
+    try {
+      const hints = cardHints
+        .split(",")
+        .map((h) => h.trim())
+        .filter(Boolean);
+
+      await createCard.mutateAsync({
+        front: cardFront.trim(),
+        back: cardBack.trim(),
+        hints: hints.length > 0 ? hints : undefined,
+      });
+
+      // Limpar formulário
+      setCardFront("");
+      setCardBack("");
+      setCardHints("");
+      setIsAddingCard(false);
+    } catch (error) {
+      console.error("Erro ao criar card:", error);
+    }
+  };
+
+  const handleStartEditCard = (card: any) => {
+    setEditingCardId(card._id);
+    setEditCardFront(card.front);
+    setEditCardBack(card.back);
+    setEditCardHints(card.hints?.join(", ") || "");
+  };
+
+  const handleSaveEditCard = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingCardId || !editCardFront.trim() || !editCardBack.trim()) return;
+
+    try {
+      const hints = editCardHints
+        .split(",")
+        .map((h) => h.trim())
+        .filter(Boolean);
+
+      await updateCard.mutateAsync({
+        id: editingCardId,
+        data: {
+          front: editCardFront.trim(),
+          back: editCardBack.trim(),
+          hints: hints.length > 0 ? hints : undefined,
+        },
+      });
+
+      handleCancelEditCard();
+    } catch (error) {
+      console.error("Erro ao atualizar card:", error);
+    }
+  };
+
+  const handleCancelEditCard = () => {
+    setEditingCardId(null);
+    setEditCardFront("");
+    setEditCardBack("");
+    setEditCardHints("");
+  };
+
+  const handleDeleteCard = async (cardId: string) => {
+    try {
+      await deleteCard.mutateAsync(cardId);
+    } catch (error) {
+      console.error("Erro ao deletar card:", error);
+    }
   };
 
   return (
@@ -266,20 +367,294 @@ export default function DeckDetail() {
         </CardContent>
       </UiCard>
 
-      {/* TODO: Adicionar gerenciamento de cards aqui */}
+      {/* Cards Management Section */}
       <UiCard className="shadow-card">
         <CardHeader>
-          <CardTitle>Cards</CardTitle>
-          <CardDescription>
-            Gerenciamento de cards será implementado em breve
-          </CardDescription>
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle>Cards</CardTitle>
+              <CardDescription>
+                {deck.cards_count === 0
+                  ? "Nenhum card ainda"
+                  : `${deck.cards_count} ${
+                      deck.cards_count === 1 ? "card" : "cards"
+                    }`}
+              </CardDescription>
+            </div>
+            {canEdit && !isAddingCard && (
+              <Button onClick={() => setIsAddingCard(true)} size="sm">
+                <Plus className="h-4 w-4 mr-2" />
+                Adicionar Card
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="text-sm text-muted-foreground">
-            Este deck possui {deck.cards_count}{" "}
-            {deck.cards_count === 1 ? "card" : "cards"}. A funcionalidade de
-            adicionar e editar cards será implementada em uma próxima etapa.
-          </div>
+          {/* Add Card Form */}
+          {isAddingCard && (
+            <div className="border rounded-lg p-4 mb-4 bg-muted/50">
+              <h3 className="font-semibold mb-3">Novo Card</h3>
+              <form onSubmit={handleAddCard} className="space-y-3">
+                <div>
+                  <label className="text-sm font-medium mb-1 block">
+                    Frente (Pergunta) *
+                  </label>
+                  <Textarea
+                    value={cardFront}
+                    onChange={(e) => setCardFront(e.target.value)}
+                    placeholder="Digite a pergunta ou termo..."
+                    required
+                    maxLength={1000}
+                    rows={3}
+                  />
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {cardFront.length}/1000 caracteres
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1 block">
+                    Verso (Resposta) *
+                  </label>
+                  <Textarea
+                    value={cardBack}
+                    onChange={(e) => setCardBack(e.target.value)}
+                    placeholder="Digite a resposta ou definição..."
+                    required
+                    maxLength={2000}
+                    rows={4}
+                  />
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {cardBack.length}/2000 caracteres
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1 block">
+                    Dicas (opcional)
+                  </label>
+                  <Input
+                    value={cardHints}
+                    onChange={(e) => setCardHints(e.target.value)}
+                    placeholder="Digite dicas separadas por vírgula..."
+                  />
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Separe múltiplas dicas com vírgulas
+                  </div>
+                </div>
+                <div className="flex gap-2 justify-end">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setIsAddingCard(false);
+                      setCardFront("");
+                      setCardBack("");
+                      setCardHints("");
+                    }}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={createCard.isPending || !cardFront || !cardBack}
+                  >
+                    {createCard.isPending && (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    )}
+                    Adicionar
+                  </Button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* Cards List */}
+          {isLoadingCards ? (
+            <div className="space-y-3">
+              <Skeleton className="h-32 w-full" />
+              <Skeleton className="h-32 w-full" />
+              <Skeleton className="h-32 w-full" />
+            </div>
+          ) : isErrorCards ? (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Não foi possível carregar os cards deste deck. Tente novamente
+                mais tarde.
+              </AlertDescription>
+            </Alert>
+          ) : cards && cards.length > 0 ? (
+            <div className="space-y-3">
+              {cards.map((card) => (
+                <div
+                  key={card._id}
+                  className="border rounded-lg p-4 hover:bg-muted/50 transition-colors"
+                >
+                  {editingCardId === card._id ? (
+                    // Edit Mode
+                    <form onSubmit={handleSaveEditCard} className="space-y-3">
+                      <div>
+                        <label className="text-sm font-medium mb-1 block">
+                          Frente (Pergunta) *
+                        </label>
+                        <Textarea
+                          value={editCardFront}
+                          onChange={(e) => setEditCardFront(e.target.value)}
+                          required
+                          maxLength={1000}
+                          rows={3}
+                        />
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {editCardFront.length}/1000 caracteres
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium mb-1 block">
+                          Verso (Resposta) *
+                        </label>
+                        <Textarea
+                          value={editCardBack}
+                          onChange={(e) => setEditCardBack(e.target.value)}
+                          required
+                          maxLength={2000}
+                          rows={4}
+                        />
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {editCardBack.length}/2000 caracteres
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium mb-1 block">
+                          Dicas (opcional)
+                        </label>
+                        <Input
+                          value={editCardHints}
+                          onChange={(e) => setEditCardHints(e.target.value)}
+                          placeholder="Digite dicas separadas por vírgula..."
+                        />
+                      </div>
+                      <div className="flex gap-2 justify-end">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={handleCancelEditCard}
+                        >
+                          Cancelar
+                        </Button>
+                        <Button
+                          type="submit"
+                          disabled={
+                            updateCard.isPending ||
+                            !editCardFront ||
+                            !editCardBack
+                          }
+                        >
+                          {updateCard.isPending && (
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          )}
+                          Salvar
+                        </Button>
+                      </div>
+                    </form>
+                  ) : (
+                    // View Mode
+                    <>
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex-1">
+                          <div className="font-semibold text-sm text-muted-foreground mb-1">
+                            Frente:
+                          </div>
+                          <div className="mb-3 whitespace-pre-wrap">
+                            {card.front}
+                          </div>
+                          <div className="font-semibold text-sm text-muted-foreground mb-1">
+                            Verso:
+                          </div>
+                          <div className="mb-3 whitespace-pre-wrap">
+                            {card.back}
+                          </div>
+                          {card.hints && card.hints.length > 0 && (
+                            <div>
+                              <div className="font-semibold text-sm text-muted-foreground mb-1">
+                                Dicas:
+                              </div>
+                              <div className="flex flex-wrap gap-1">
+                                {card.hints.map((hint, idx) => (
+                                  <span
+                                    key={idx}
+                                    className="inline-flex items-center rounded-full bg-primary/10 px-2 py-1 text-xs"
+                                  >
+                                    {hint}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        {canEdit && (
+                          <div className="flex gap-2 ml-4">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleStartEditCard(card)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="outline" size="sm">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>
+                                    Tem certeza?
+                                  </AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Esta ação não pode ser desfeita. Este card
+                                    será permanentemente excluído.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>
+                                    Cancelar
+                                  </AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => handleDeleteCard(card._id)}
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                  >
+                                    Excluir
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        )}
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-2">
+                        Criado em{" "}
+                        {new Date(card.created_at).toLocaleDateString("pt-BR")}
+                      </div>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              <p className="mb-2">Nenhum card ainda neste deck.</p>
+              {canEdit && !isAddingCard && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsAddingCard(true)}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Criar primeiro card
+                </Button>
+              )}
+            </div>
+          )}
         </CardContent>
       </UiCard>
     </div>

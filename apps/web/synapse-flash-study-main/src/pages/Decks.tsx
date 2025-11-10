@@ -22,11 +22,7 @@ export default function Decks() {
 
   const isTeacher = user?.role === "TEACHER" || user?.role === "ADMIN";
 
-  const { data, isLoading, isError, error } = useDecks({
-    query: searchTerm || undefined,
-    page: 1,
-    limit: 20,
-  });
+  const { data, isLoading, isError, error } = useDecks();
 
   if (!isAuthenticated) {
     return <Navigate to="/login" />;
@@ -97,7 +93,8 @@ export default function Decks() {
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
             Erro ao carregar decks:{" "}
-            {(error as { response?: { data?: { message?: string } } })?.response?.data?.message || "Erro desconhecido"}
+            {(error as { response?: { data?: { message?: string } } })?.response
+              ?.data?.message || "Erro desconhecido"}
           </AlertDescription>
         </Alert>
       )}

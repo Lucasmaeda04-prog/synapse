@@ -11,6 +11,7 @@ import { AuthController } from './auth/auth.controller';
 import { UsersModule } from './users/users.module';
 import { DecksModule } from './decks/decks.module';
 import { ClassesModule } from './classes/classes.module';
+import { CardsModule } from './cards/cards.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { ClassesModule } from './classes/classes.module';
     UsersModule,
     DecksModule,
     ClassesModule,
+    CardsModule,
   ],
   controllers: [AppController, HealthController, AuthController],
   providers: [AppService, HealthService],
