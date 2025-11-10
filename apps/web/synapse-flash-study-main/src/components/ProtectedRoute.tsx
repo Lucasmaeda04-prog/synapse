@@ -40,9 +40,17 @@ export default function ProtectedRoute({ children, requiredRole }: ProtectedRout
     );
   }
 
-  // Verificar role se necessário
-  if (requiredRole && user?.role !== requiredRole) {
-    return <Navigate to="/dashboard" replace />;
+  if (requiredRole) {
+    const roleHierarchy: Record<string, string[]> = {
+      'STUDENT': ['STUDENT'],
+      'TEACHER': ['TEACHER', 'ADMIN'],
+      'ADMIN': ['ADMIN'],
+    };
+    
+    const allowedRoles = roleHierarchy[requiredRole] || [];
+    if (!user?.role || !allowedRoles.includes(user.role)) {
+      return <Navigate to="/dashboard" replace />;
+    }
   }
 
   return <>{children}</>;

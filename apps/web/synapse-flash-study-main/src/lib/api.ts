@@ -53,7 +53,7 @@ export async function apiRequest<T>(
 // Funções específicas da API
 export const api = {
   // Auth
-  getCurrentUser: () => apiRequest<{ id: string; email: string; name: string; role: string }>('/auth/me'),
+  getCurrentUser: () => apiRequest<{ id: string; email: string; name: string; role: string }>('/users/me'),
   
   // Users - endpoint público (não requer autenticação)
   createUser: async (data: { uid: string; email: string; name: string; role: 'TEACHER' | 'STUDENT' }) => {

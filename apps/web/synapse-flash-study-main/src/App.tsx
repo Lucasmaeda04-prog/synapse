@@ -81,7 +81,7 @@ const App = () => (
             } />
             
             <Route path="/reports" element={
-              <ProtectedRoute>
+              <ProtectedRoute requiredRole="TEACHER">
                 <DashboardLayout><Reports /></DashboardLayout>
               </ProtectedRoute>
             } />

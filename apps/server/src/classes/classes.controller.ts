@@ -11,6 +11,9 @@ import {
   Request,
   ValidationPipe,
 } from '@nestjs/common';
+import { FirebaseAuthGuard } from '../auth/firebase-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
 import {
   ApiTags,
   ApiOperation,
@@ -37,7 +40,9 @@ export class ClassesController {
   constructor(private readonly classesService: ClassesService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Criar uma nova turma' })
+  @UseGuards(FirebaseAuthGuard, RolesGuard)
+  @Roles('TEACHER', 'ADMIN')
+  @ApiOperation({ summary: 'Criar uma nova turma (apenas TEACHER/ADMIN)' })
   @ApiResponse({
     status: 201,
     description: 'Turma criada com sucesso',
@@ -45,6 +50,7 @@ export class ClassesController {
   })
   @ApiResponse({ status: 400, description: 'Dados inválidos' })
   @ApiResponse({ status: 401, description: 'Não autorizado' })
+  @ApiResponse({ status: 403, description: 'Acesso negado' })
   @ApiBearerAuth()
   create(
     @Body(ValidationPipe) createClassDto: CreateClassDto,
@@ -96,7 +102,9 @@ export class ClassesController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Atualizar uma turma' })
+  @UseGuards(FirebaseAuthGuard, RolesGuard)
+  @Roles('TEACHER', 'ADMIN')
+  @ApiOperation({ summary: 'Atualizar uma turma (apenas TEACHER/ADMIN)' })
   @ApiResponse({
     status: 200,
     description: 'Turma atualizada com sucesso',
@@ -117,7 +125,9 @@ export class ClassesController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Deletar uma turma' })
+  @UseGuards(FirebaseAuthGuard, RolesGuard)
+  @Roles('TEACHER', 'ADMIN')
+  @ApiOperation({ summary: 'Deletar uma turma (apenas TEACHER/ADMIN)' })
   @ApiResponse({ status: 200, description: 'Turma deletada com sucesso' })
   @ApiResponse({ status: 404, description: 'Turma não encontrada' })
   @ApiResponse({ status: 403, description: 'Sem permissão para deletar' })
@@ -133,7 +143,9 @@ export class ClassesController {
   }
 
   @Post(':id/students')
-  @ApiOperation({ summary: 'Adicionar alunos à turma' })
+  @UseGuards(FirebaseAuthGuard, RolesGuard)
+  @Roles('TEACHER', 'ADMIN')
+  @ApiOperation({ summary: 'Adicionar alunos à turma (apenas TEACHER/ADMIN)' })
   @ApiResponse({
     status: 200,
     description: 'Alunos adicionados com sucesso',
@@ -155,7 +167,9 @@ export class ClassesController {
   }
 
   @Delete(':id/students')
-  @ApiOperation({ summary: 'Remover alunos da turma' })
+  @UseGuards(FirebaseAuthGuard, RolesGuard)
+  @Roles('TEACHER', 'ADMIN')
+  @ApiOperation({ summary: 'Remover alunos da turma (apenas TEACHER/ADMIN)' })
   @ApiResponse({
     status: 200,
     description: 'Alunos removidos com sucesso',

@@ -58,9 +58,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       if (firebaseUser) {
         try {
-          // Tentar buscar dados do backend primeiro
           const { api } = await import('@/lib/api');
+          console.log('📥 Buscando dados do usuário no backend...');
           const backendUser = await api.getCurrentUser();
+          console.log('✅ Dados do usuário recebidos do backend:', {
+            id: backendUser.id || (backendUser as any)._id?.toString(),
+            email: backendUser.email,
+            name: backendUser.name,
+            role: backendUser.role,
+          });
           setUser({
             id: backendUser.id || (backendUser as any)._id?.toString() || '',
             name: backendUser.name,
@@ -158,7 +164,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const resetPassword = async (email: string) => {
     try {
-      // Configurar a URL de redirecionamento após reset de senha
       const actionCodeSettings = {
         url: `${window.location.origin}/login`,
         handleCodeInApp: false,

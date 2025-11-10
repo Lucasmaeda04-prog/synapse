@@ -22,7 +22,7 @@ export default function ClassNew() {
   const createClass = useCreateClass();
 
   if (!isAuthenticated) return <Navigate to="/login" />;
-  if (user?.role !== "teacher") return <Navigate to="/dashboard" />;
+  if (user?.role !== "TEACHER" && user?.role !== "ADMIN") return <Navigate to="/dashboard" />;
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,14 +30,10 @@ export default function ClassNew() {
     try {
       await createClass.mutateAsync({
         name,
-        // student_ids, org_id e school_id são opcionais
-        // Alunos podem ser adicionados depois na página de detalhes da turma
       });
 
-      // Navegar para a lista de classes após criar
       navigate("/classes");
     } catch (error) {
-      // Erro já é tratado pelo hook (mostra toast)
       console.error("Erro ao criar turma:", error);
     }
   };

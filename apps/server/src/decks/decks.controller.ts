@@ -11,6 +11,9 @@ import {
   Request,
   ValidationPipe,
 } from '@nestjs/common';
+import { FirebaseAuthGuard } from '../auth/firebase-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
 import {
   ApiTags,
   ApiOperation,
@@ -36,7 +39,9 @@ export class DecksController {
   constructor(private readonly decksService: DecksService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Criar um novo deck' })
+  @UseGuards(FirebaseAuthGuard, RolesGuard)
+  @Roles('TEACHER', 'ADMIN')
+  @ApiOperation({ summary: 'Criar um novo deck (apenas TEACHER/ADMIN)' })
   @ApiResponse({
     status: 201,
     description: 'Deck criado com sucesso',
@@ -44,6 +49,7 @@ export class DecksController {
   })
   @ApiResponse({ status: 400, description: 'Dados inválidos' })
   @ApiResponse({ status: 401, description: 'Não autorizado' })
+  @ApiResponse({ status: 403, description: 'Acesso negado' })
   @ApiBearerAuth()
   create(
     @Body(ValidationPipe) createDeckDto: CreateDeckDto,
@@ -65,7 +71,6 @@ export class DecksController {
     @Query(ValidationPipe) queryDto: QueryDeckDto,
     @Request() req: any,
   ): Promise<PaginatedDecksResponseDto> {
-    // TODO: Implementar autenticação e pegar userId do req.user
     const userId = queryDto.mine ? req.user?.userId || undefined : undefined;
     return this.decksService.findAll(queryDto, userId);
   }
@@ -89,7 +94,9 @@ export class DecksController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Atualizar um deck' })
+  @UseGuards(FirebaseAuthGuard, RolesGuard)
+  @Roles('TEACHER', 'ADMIN')
+  @ApiOperation({ summary: 'Atualizar um deck (apenas TEACHER/ADMIN)' })
   @ApiResponse({
     status: 200,
     description: 'Deck atualizado com sucesso',
@@ -110,7 +117,9 @@ export class DecksController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Deletar um deck' })
+  @UseGuards(FirebaseAuthGuard, RolesGuard)
+  @Roles('TEACHER', 'ADMIN')
+  @ApiOperation({ summary: 'Deletar um deck (apenas TEACHER/ADMIN)' })
   @ApiResponse({ status: 200, description: 'Deck deletado com sucesso' })
   @ApiResponse({ status: 404, description: 'Deck não encontrado' })
   @ApiResponse({ status: 403, description: 'Sem permissão para deletar' })

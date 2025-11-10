@@ -79,14 +79,25 @@ export class UsersController {
   async getCurrentUser(@CurrentUser() user: User) {
     const dbUser = await this.usersService.findUserByUid(user.uid);
     if (!dbUser) {
-      // Se não existe no MongoDB, criar automaticamente
+      console.log(
+        '⚠️ Usuário não encontrado no MongoDB, criando com role STUDENT:',
+        {
+          uid: user.uid,
+          email: user.email,
+        },
+      );
       return this.usersService.createUser({
         uid: user.uid,
         email: user.email,
         name: user.name || user.email.split('@')[0],
-        role: (user.role as 'ADMIN' | 'TEACHER' | 'STUDENT') || 'STUDENT',
+        role: 'STUDENT',
       });
     }
+    console.log('✅ Usuário encontrado no MongoDB:', {
+      uid: dbUser.uid,
+      email: dbUser.email,
+      role: dbUser.role,
+    });
     return dbUser;
   }
 

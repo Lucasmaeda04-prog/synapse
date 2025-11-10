@@ -19,7 +19,19 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     navigate('/login');
   };
 
-  const isTeacher = user?.role === 'teacher';
+  const getRoleLabel = () => {
+    if (!user?.role) return 'Usuário';
+    switch (user.role) {
+      case 'ADMIN':
+        return 'Administrador';
+      case 'TEACHER':
+        return 'Professor';
+      case 'STUDENT':
+        return 'Aluno';
+      default:
+        return 'Usuário';
+    }
+  };
 
   const navItems = [
     { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -60,7 +72,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               <div className="text-right hidden sm:block">
                 <p className="text-sm font-medium">{user?.name}</p>
                 <p className="text-xs text-muted-foreground">
-                  {isTeacher ? 'Professor' : 'Aluno'}
+                  {getRoleLabel()}
                 </p>
               </div>
               <Button variant="outline" size="icon" onClick={handleLogout}>

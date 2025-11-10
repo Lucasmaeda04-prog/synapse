@@ -26,12 +26,12 @@ export class AuthController {
   @ApiOperation({ summary: 'Obter dados do usuário atual' })
   @ApiResponse({ status: 200, description: 'Dados do usuário' })
   @ApiResponse({ status: 401, description: 'Não autorizado' })
-  getProfile(@CurrentUser() user: User) {
+  async getProfile(@CurrentUser() user: User) {
     return {
       id: user.uid,
       email: user.email,
       name: user.name,
-      role: user.role,
+      role: user.role, // Este role vem do FirebaseAuthGuard, pode estar incorreto
     };
   }
 
