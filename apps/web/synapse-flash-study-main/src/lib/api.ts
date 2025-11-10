@@ -57,22 +57,35 @@ export const api = {
   
   // Users - endpoint público (não requer autenticação)
   createUser: async (data: { uid: string; email: string; name: string; role: 'TEACHER' | 'STUDENT' }) => {
-    // Este endpoint não requer autenticação, então não precisa do token
-    const response = await fetch(`${API_URL}/users`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
+    console.log('📤 Enviando requisição para criar usuário:', { ...data, password: '[hidden]' });
+    
+    try {
+      // Este endpoint não requer autenticação, então não precisa do token
+      const response = await fetch(`${API_URL}/users`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
 
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Erro desconhecido' }));
-      const errorMessage = error.message || `HTTP error! status: ${response.status}`;
-      throw new Error(errorMessage);
+      console.log('📥 Resposta do servidor:', response.status, response.statusText);
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ message: 'Erro desconhecido' }));
+        console.error('❌ Erro na resposta:', error);
+        const errorMessage = error.message || `HTTP error! status: ${response.status}`;
+        throw new Error(`${errorMessage} (Status: ${response.status})`);
+      }
+
+      const result = await response.json();
+      console.log('✅ Usuário criado com sucesso:', result);
+      return result;
+    } catch (error: any) {
+      console.error('❌ Erro ao criar usuário:', error);
+      // Re-throw para que o AuthContext possa tratar
+      throw error;
     }
-
-    return response.json();
   },
   
   // Decks (quando implementado)

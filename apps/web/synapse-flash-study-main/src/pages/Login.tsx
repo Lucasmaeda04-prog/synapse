@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -17,9 +17,16 @@ export default function Login() {
   const [role, setRole] = useState<'TEACHER' | 'STUDENT'>('STUDENT');
   const [isLoading, setIsLoading] = useState(false);
   
-  const { login, register } = useAuth();
+  const { login, register, isAuthenticated, firebaseUser } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Redirecionar se já estiver autenticado
+  useEffect(() => {
+    if (firebaseUser) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [firebaseUser, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,6 +34,7 @@ export default function Login() {
     
     try {
       await login(email, password);
+      // Navegar imediatamente - o ProtectedRoute vai verificar firebaseUser
       navigate('/dashboard');
       toast({
         title: 'Login realizado com sucesso!',
@@ -84,28 +92,28 @@ export default function Login() {
             
             <TabsContent value="login" className="space-y-4">
               <form onSubmit={handleLogin} className="space-y-4">
-                <div className="space-y-2">
+            <div className="space-y-2">
                   <Label htmlFor="login-email">Email</Label>
-                  <Input
+              <Input
                     id="login-email"
-                    type="email"
-                    placeholder="seu@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
+                type="email"
+                placeholder="seu@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
                   <Label htmlFor="login-password">Senha</Label>
-                  <Input
+              <Input
                     id="login-password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                </div>
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
                 <Button type="submit" className="w-full" variant="gradient" disabled={isLoading}>
                   {isLoading ? 'Entrando...' : 'Entrar'}
                 </Button>
@@ -162,8 +170,8 @@ export default function Login() {
                 </div>
                 <Button type="submit" className="w-full" variant="gradient" disabled={isLoading}>
                   {isLoading ? 'Criando conta...' : 'Criar conta'}
-                </Button>
-              </form>
+            </Button>
+          </form>
             </TabsContent>
           </Tabs>
           

@@ -8,8 +8,9 @@ interface ProtectedRouteProps {
 }
 
 export default function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) {
-  const { user, isAuthenticated, loading } = useAuth();
+  const { user, firebaseUser, isAuthenticated, loading } = useAuth();
 
+  // Se ainda está carregando, mostrar loading
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -22,10 +23,24 @@ export default function ProtectedRoute({ children, requiredRole }: ProtectedRout
     );
   }
 
-  if (!isAuthenticated) {
+  // Se não tem firebaseUser, não está autenticado
+  if (!firebaseUser) {
     return <Navigate to="/login" replace />;
   }
 
+  // Se tem firebaseUser mas ainda não carregou os dados do usuário, aguardar um pouco
+  if (firebaseUser && !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="space-y-4 w-full max-w-md">
+          <Skeleton className="h-8 w-3/4 mx-auto" />
+          <Skeleton className="h-4 w-1/2 mx-auto" />
+        </div>
+      </div>
+    );
+  }
+
+  // Verificar role se necessário
   if (requiredRole && user?.role !== requiredRole) {
     return <Navigate to="/dashboard" replace />;
   }

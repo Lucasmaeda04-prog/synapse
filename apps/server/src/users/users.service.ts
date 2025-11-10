@@ -3,18 +3,16 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User, UserDocument } from '../database/schemas/user.schema';
 
-export interface CreateUserDto {
-  uid: string;
-  email: string;
-  name: string;
-  role: 'ADMIN' | 'TEACHER' | 'STUDENT';
-}
-
 @Injectable()
 export class UsersService {
   constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
 
-  async createUser(createUserDto: CreateUserDto): Promise<User> {
+  async createUser(createUserDto: {
+    uid: string;
+    email: string;
+    name: string;
+    role: 'ADMIN' | 'TEACHER' | 'STUDENT';
+  }): Promise<UserDocument> {
     // Verificar se já existe por UID
     const existingByUid = await this.findUserByUid(createUserDto.uid);
     if (existingByUid) {
@@ -36,9 +34,10 @@ export class UsersService {
       return await user.save();
     } catch (error: any) {
       // Se for erro de duplicata, tentar buscar o usuário existente
-      if (error.code === 11000) {
-        const existingUser = await this.findUserByUid(createUserDto.uid) || 
-                           await this.findUserByEmail(createUserDto.email);
+      if ((error as { code?: number }).code === 11000) {
+        const existingUser =
+          (await this.findUserByUid(createUserDto.uid)) ||
+          (await this.findUserByEmail(createUserDto.email));
         if (existingUser) {
           return existingUser;
         }
@@ -47,18 +46,18 @@ export class UsersService {
     }
   }
 
-  async findUserByUid(uid: string): Promise<User | null> {
+  async findUserByUid(uid: string): Promise<UserDocument | null> {
     return this.userModel.findOne({ uid }).exec();
   }
 
-  async findUserByEmail(email: string): Promise<User | null> {
+  async findUserByEmail(email: string): Promise<UserDocument | null> {
     return this.userModel.findOne({ email }).exec();
   }
 
   async updateUserRole(
     uid: string,
     role: 'ADMIN' | 'TEACHER' | 'STUDENT',
-  ): Promise<User | null> {
+  ): Promise<UserDocument | null> {
     // Atualizar no MongoDB
     const user = await this.userModel
       .findOneAndUpdate({ uid }, { role }, { new: true })
@@ -70,7 +69,7 @@ export class UsersService {
     return user;
   }
 
-  async getAllUsers(): Promise<User[]> {
+  async getAllUsers(): Promise<UserDocument[]> {
     return this.userModel.find().exec();
   }
 

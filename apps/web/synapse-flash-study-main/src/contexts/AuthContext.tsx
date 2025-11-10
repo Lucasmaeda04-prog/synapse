@@ -57,10 +57,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (firebaseUser) {
         try {
           // Tentar buscar dados do backend primeiro
-          const { getCurrentUser } = await import('@/lib/api');
-          const backendUser = await getCurrentUser();
+          const { api } = await import('@/lib/api');
+          const backendUser = await api.getCurrentUser();
           setUser({
-            id: backendUser.id,
+            id: backendUser.id || (backendUser as any)._id?.toString() || '',
             name: backendUser.name,
             email: backendUser.email,
             role: backendUser.role as 'ADMIN' | 'TEACHER' | 'STUDENT',
@@ -94,6 +94,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
+      // O onAuthStateChanged vai atualizar o estado automaticamente
+      // Não precisamos aguardar aqui, pois o ProtectedRoute verifica firebaseUser
     } catch (error: any) {
       throw new Error(error.message);
     }
@@ -101,16 +103,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = async (email: string, password: string, name: string, role: 'TEACHER' | 'STUDENT') => {
     try {
+      console.log('🔥 Criando usuário no Firebase...', { email, name, role });
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(userCredential.user, { displayName: name });
+      console.log('✅ Usuário criado no Firebase:', userCredential.user.uid);
       
       // Aguardar um pouco para garantir que o Firebase processou
       await new Promise(resolve => setTimeout(resolve, 500));
       
       // Sincronizar com backend - criar usuário no MongoDB
+      console.log('📦 Sincronizando com MongoDB...');
       try {
-        const { createUser } = await import('@/lib/api');
-        const result = await createUser({
+        const { api } = await import('@/lib/api');
+        const result = await api.createUser({
           uid: userCredential.user.uid,
           email,
           name,
@@ -119,16 +124,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log('✅ Usuário criado no MongoDB:', result);
       } catch (backendError: any) {
         console.error('❌ Erro ao sincronizar com backend:', backendError);
+        console.error('Detalhes do erro:', {
+          message: backendError.message,
+          stack: backendError.stack,
+        });
+        
         // Se o erro for 409 (já existe), não é problema
         if (backendError.message?.includes('409') || backendError.message?.includes('já existe')) {
           console.log('ℹ️ Usuário já existe no MongoDB, continuando...');
         } else {
           // Para outros erros, ainda continuamos mas logamos
           console.warn('⚠️ Falha ao criar usuário no MongoDB, mas registro no Firebase foi bem-sucedido');
+          // Re-throw para que a UI possa mostrar o erro
+          throw new Error(`Falha ao criar usuário no sistema: ${backendError.message}`);
         }
       }
       
     } catch (error: any) {
+      console.error('❌ Erro no registro:', error);
       throw new Error(error.message);
     }
   };

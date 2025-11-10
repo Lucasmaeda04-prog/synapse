@@ -6,6 +6,7 @@ import {
   UseGuards,
   Patch,
   Param,
+  ValidationPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -14,13 +15,14 @@ import {
   ApiResponse,
 } from '@nestjs/swagger';
 import { UsersService } from './users.service';
-import type { CreateUserDto } from './users.service';
+import { CreateUserDto } from './dto/create-user.dto';
 import { FirebaseAuthGuard } from '../auth/firebase-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { CurrentUser } from '../auth/current-user.decorator';
 
 interface User {
+  _id: string;
   uid: string;
   email: string;
   name: string;
@@ -35,19 +37,37 @@ export class UsersController {
   @Post()
   @ApiOperation({
     summary: 'Criar novo usuário (sincronização Firebase → MongoDB)',
-    description: 'Endpoint público para criar usuário após registro no Firebase. Não requer autenticação.',
+    description:
+      'Endpoint público para criar usuário após registro no Firebase. Não requer autenticação.',
   })
   @ApiResponse({ status: 201, description: 'Usuário criado com sucesso' })
   @ApiResponse({ status: 400, description: 'Dados inválidos' })
   @ApiResponse({ status: 409, description: 'Usuário já existe' })
-  async createUser(@Body() createUserDto: CreateUserDto) {
-    // Verificar se o usuário já existe
-    const existingUser = await this.usersService.findUserByUid(createUserDto.uid);
-    if (existingUser) {
-      return existingUser; // Retornar usuário existente ao invés de erro
+  async createUser(@Body(ValidationPipe) createUserDto: CreateUserDto) {
+    console.log('📥 Recebendo requisição para criar usuário:', {
+      uid: createUserDto.uid,
+      email: createUserDto.email,
+      name: createUserDto.name,
+      role: createUserDto.role,
+    });
+
+    try {
+      // Verificar se o usuário já existe
+      const existingUser = await this.usersService.findUserByUid(
+        createUserDto.uid,
+      );
+      if (existingUser) {
+        console.log('ℹ️ Usuário já existe, retornando existente');
+        return existingUser; // Retornar usuário existente ao invés de erro
+      }
+
+      const newUser = await this.usersService.createUser(createUserDto);
+      console.log('✅ Usuário criado com sucesso no MongoDB:', newUser.id);
+      return newUser;
+    } catch (error: any) {
+      console.error('❌ Erro ao criar usuário:', error);
+      throw error;
     }
-    
-    return this.usersService.createUser(createUserDto);
   }
 
   @Get('me')
