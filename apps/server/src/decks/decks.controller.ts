@@ -11,13 +11,21 @@ import {
   Request,
   ValidationPipe,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { Types } from 'mongoose';
 import { DecksService } from './decks.service';
 import { CreateDeckDto } from './dto/create-deck.dto';
 import { UpdateDeckDto } from './dto/update-deck.dto';
 import { QueryDeckDto } from './dto/query-deck.dto';
-import { DeckResponseDto, PaginatedDecksResponseDto } from './dto/deck-response.dto';
+import {
+  DeckResponseDto,
+  PaginatedDecksResponseDto,
+} from './dto/deck-response.dto';
 
 @ApiTags('decks')
 @Controller('decks')
@@ -29,7 +37,11 @@ export class DecksController {
 
   @Post()
   @ApiOperation({ summary: 'Criar um novo deck' })
-  @ApiResponse({ status: 201, description: 'Deck criado com sucesso', type: DeckResponseDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Deck criado com sucesso',
+    type: DeckResponseDto,
+  })
   @ApiResponse({ status: 400, description: 'Dados inválidos' })
   @ApiResponse({ status: 401, description: 'Não autorizado' })
   @ApiBearerAuth()
@@ -44,19 +56,27 @@ export class DecksController {
 
   @Get()
   @ApiOperation({ summary: 'Listar decks com filtros e paginação' })
-  @ApiResponse({ status: 200, description: 'Lista de decks', type: PaginatedDecksResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de decks',
+    type: PaginatedDecksResponseDto,
+  })
   findAll(
     @Query(ValidationPipe) queryDto: QueryDeckDto,
     @Request() req: any,
   ): Promise<PaginatedDecksResponseDto> {
     // TODO: Implementar autenticação e pegar userId do req.user
-    const userId = queryDto.mine ? (req.user?.userId || undefined) : undefined;
+    const userId = queryDto.mine ? req.user?.userId || undefined : undefined;
     return this.decksService.findAll(queryDto, userId);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Buscar um deck por ID' })
-  @ApiResponse({ status: 200, description: 'Deck encontrado', type: DeckResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Deck encontrado',
+    type: DeckResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Deck não encontrado' })
   @ApiResponse({ status: 403, description: 'Acesso negado' })
   findOne(
@@ -70,7 +90,11 @@ export class DecksController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Atualizar um deck' })
-  @ApiResponse({ status: 200, description: 'Deck atualizado com sucesso', type: DeckResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Deck atualizado com sucesso',
+    type: DeckResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Deck não encontrado' })
   @ApiResponse({ status: 403, description: 'Sem permissão para atualizar' })
   @ApiResponse({ status: 401, description: 'Não autorizado' })

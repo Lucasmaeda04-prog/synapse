@@ -25,14 +25,22 @@ async function run() {
     const DeckModel = app.get<Model<Deck>>(getModelToken('Deck'));
     const CardModel = app.get<Model<Card>>(getModelToken('Card'));
     const ClassModel = app.get<Model<ClassEntity>>(getModelToken('Class'));
-    const AssignmentModel = app.get<Model<Assignment>>(getModelToken('Assignment'));
+    const AssignmentModel = app.get<Model<Assignment>>(
+      getModelToken('Assignment'),
+    );
     const ReviewModel = app.get<Model<Review>>(getModelToken('Review'));
     const ProgressModel = app.get<Model<Progress>>(getModelToken('Progress'));
 
     // 1) Users (teacher + student)
     const teacher = await UserModel.findOneAndUpdate(
       { email: 'professor@synapse.com' },
-      { $set: { name: 'Prof. Maria Silva', role: 'TEACHER', password_hash: 'seed' } },
+      {
+        $set: {
+          name: 'Prof. Maria Silva',
+          role: 'TEACHER',
+          password_hash: 'seed',
+        },
+      },
       { upsert: true, new: true },
     ).lean();
 
@@ -81,7 +89,10 @@ async function run() {
       { $set: { cards_count: { $ifNull: ['$cards_count', 0] } } },
     ]);
     const deckCardsCount = await CardModel.countDocuments({ deck_id: deckId });
-    await DeckModel.updateOne({ _id: deckId }, { $set: { cards_count: deckCardsCount } });
+    await DeckModel.updateOne(
+      { _id: deckId },
+      { $set: { cards_count: deckCardsCount } },
+    );
 
     // 4) Class (turma) com o aluno matriculado
     const klass = await ClassModel.findOneAndUpdate(
@@ -133,7 +144,6 @@ async function run() {
 
     logger.log('Seed concluído com sucesso. Verifique as coleções no Atlas.');
   } catch (err) {
-    // eslint-disable-next-line no-console
     console.error(err);
     process.exitCode = 1;
   } finally {
@@ -142,4 +152,3 @@ async function run() {
 }
 
 run();
-

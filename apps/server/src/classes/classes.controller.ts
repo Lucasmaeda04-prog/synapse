@@ -11,14 +11,22 @@ import {
   Request,
   ValidationPipe,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { Types } from 'mongoose';
 import { ClassesService } from './classes.service';
 import { CreateClassDto } from './dto/create-class.dto';
 import { UpdateClassDto } from './dto/update-class.dto';
 import { QueryClassDto } from './dto/query-class.dto';
 import { AddStudentsDto, RemoveStudentsDto } from './dto/add-students.dto';
-import { ClassResponseDto, PaginatedClassesResponseDto } from './dto/class-response.dto';
+import {
+  ClassResponseDto,
+  PaginatedClassesResponseDto,
+} from './dto/class-response.dto';
 
 @ApiTags('classes')
 @Controller('classes')
@@ -30,7 +38,11 @@ export class ClassesController {
 
   @Post()
   @ApiOperation({ summary: 'Criar uma nova turma' })
-  @ApiResponse({ status: 201, description: 'Turma criada com sucesso', type: ClassResponseDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Turma criada com sucesso',
+    type: ClassResponseDto,
+  })
   @ApiResponse({ status: 400, description: 'Dados inválidos' })
   @ApiResponse({ status: 401, description: 'Não autorizado' })
   @ApiBearerAuth()
@@ -44,8 +56,14 @@ export class ClassesController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Listar turmas do professor com filtros e paginação' })
-  @ApiResponse({ status: 200, description: 'Lista de turmas', type: PaginatedClassesResponseDto })
+  @ApiOperation({
+    summary: 'Listar turmas do professor com filtros e paginação',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de turmas',
+    type: PaginatedClassesResponseDto,
+  })
   @ApiResponse({ status: 401, description: 'Não autorizado' })
   @ApiBearerAuth()
   findAll(
@@ -59,7 +77,11 @@ export class ClassesController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Buscar uma turma por ID' })
-  @ApiResponse({ status: 200, description: 'Turma encontrada', type: ClassResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Turma encontrada',
+    type: ClassResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Turma não encontrada' })
   @ApiResponse({ status: 403, description: 'Acesso negado' })
   @ApiResponse({ status: 401, description: 'Não autorizado' })
@@ -75,7 +97,11 @@ export class ClassesController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Atualizar uma turma' })
-  @ApiResponse({ status: 200, description: 'Turma atualizada com sucesso', type: ClassResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Turma atualizada com sucesso',
+    type: ClassResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Turma não encontrada' })
   @ApiResponse({ status: 403, description: 'Sem permissão para atualizar' })
   @ApiResponse({ status: 401, description: 'Não autorizado' })
@@ -108,7 +134,11 @@ export class ClassesController {
 
   @Post(':id/students')
   @ApiOperation({ summary: 'Adicionar alunos à turma' })
-  @ApiResponse({ status: 200, description: 'Alunos adicionados com sucesso', type: ClassResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Alunos adicionados com sucesso',
+    type: ClassResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Turma não encontrada' })
   @ApiResponse({ status: 403, description: 'Sem permissão para modificar' })
   @ApiResponse({ status: 400, description: 'IDs de alunos inválidos' })
@@ -126,7 +156,11 @@ export class ClassesController {
 
   @Delete(':id/students')
   @ApiOperation({ summary: 'Remover alunos da turma' })
-  @ApiResponse({ status: 200, description: 'Alunos removidos com sucesso', type: ClassResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Alunos removidos com sucesso',
+    type: ClassResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Turma não encontrada' })
   @ApiResponse({ status: 403, description: 'Sem permissão para modificar' })
   @ApiResponse({ status: 400, description: 'IDs de alunos inválidos' })

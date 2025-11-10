@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Class, ClassDocument } from '../database/schemas/class.schema';
@@ -6,7 +11,10 @@ import { CreateClassDto } from './dto/create-class.dto';
 import { UpdateClassDto } from './dto/update-class.dto';
 import { QueryClassDto } from './dto/query-class.dto';
 import { AddStudentsDto, RemoveStudentsDto } from './dto/add-students.dto';
-import { ClassResponseDto, PaginatedClassesResponseDto } from './dto/class-response.dto';
+import {
+  ClassResponseDto,
+  PaginatedClassesResponseDto,
+} from './dto/class-response.dto';
 
 @Injectable()
 export class ClassesService {
@@ -14,13 +22,17 @@ export class ClassesService {
     @InjectModel(Class.name) private classModel: Model<ClassDocument>,
   ) {}
 
-  async create(createClassDto: CreateClassDto, teacherId: string): Promise<ClassResponseDto> {
-    const studentIds = createClassDto.student_ids?.map(id => {
-      if (!Types.ObjectId.isValid(id)) {
-        throw new BadRequestException(`Invalid student ID: ${id}`);
-      }
-      return new Types.ObjectId(id);
-    }) || [];
+  async create(
+    createClassDto: CreateClassDto,
+    teacherId: string,
+  ): Promise<ClassResponseDto> {
+    const studentIds =
+      createClassDto.student_ids?.map((id) => {
+        if (!Types.ObjectId.isValid(id)) {
+          throw new BadRequestException(`Invalid student ID: ${id}`);
+        }
+        return new Types.ObjectId(id);
+      }) || [];
 
     const classEntity = new this.classModel({
       ...createClassDto,
@@ -32,8 +44,17 @@ export class ClassesService {
     return this.toResponseDto(savedClass);
   }
 
-  async findAll(queryDto: QueryClassDto, teacherId: string): Promise<PaginatedClassesResponseDto> {
-    const { page = 1, limit = 20, query, sort = 'created_at', order = 'desc' } = queryDto;
+  async findAll(
+    queryDto: QueryClassDto,
+    teacherId: string,
+  ): Promise<PaginatedClassesResponseDto> {
+    const {
+      page = 1,
+      limit = 20,
+      query,
+      sort = 'created_at',
+      order = 'desc',
+    } = queryDto;
 
     const filter: any = {
       teacher_id: new Types.ObjectId(teacherId),
@@ -61,7 +82,7 @@ export class ClassesService {
     ]);
 
     return {
-      data: data.map(classEntity => this.toResponseDto(classEntity)),
+      data: data.map((classEntity) => this.toResponseDto(classEntity)),
       total,
       page,
       limit,
@@ -88,7 +109,11 @@ export class ClassesService {
     return this.toResponseDto(classEntity);
   }
 
-  async update(id: string, updateClassDto: UpdateClassDto, teacherId: string): Promise<ClassResponseDto> {
+  async update(
+    id: string,
+    updateClassDto: UpdateClassDto,
+    teacherId: string,
+  ): Promise<ClassResponseDto> {
     if (!Types.ObjectId.isValid(id)) {
       throw new NotFoundException(`Class with ID ${id} not found`);
     }
@@ -101,12 +126,14 @@ export class ClassesService {
 
     // Apenas o professor proprietário pode editar
     if (classEntity.teacher_id.toString() !== teacherId) {
-      throw new ForbiddenException('You do not have permission to update this class');
+      throw new ForbiddenException(
+        'You do not have permission to update this class',
+      );
     }
 
     // Validar student_ids se fornecidos
     if (updateClassDto.student_ids) {
-      const studentIds = updateClassDto.student_ids.map(id => {
+      const studentIds = updateClassDto.student_ids.map((id) => {
         if (!Types.ObjectId.isValid(id)) {
           throw new BadRequestException(`Invalid student ID: ${id}`);
         }
@@ -135,7 +162,9 @@ export class ClassesService {
 
     // Apenas o professor proprietário pode deletar
     if (classEntity.teacher_id.toString() !== teacherId) {
-      throw new ForbiddenException('You do not have permission to delete this class');
+      throw new ForbiddenException(
+        'You do not have permission to delete this class',
+      );
     }
 
     await this.classModel.findByIdAndDelete(id).exec();
@@ -143,7 +172,11 @@ export class ClassesService {
     return { message: 'Class deleted successfully' };
   }
 
-  async addStudents(id: string, addStudentsDto: AddStudentsDto, teacherId: string): Promise<ClassResponseDto> {
+  async addStudents(
+    id: string,
+    addStudentsDto: AddStudentsDto,
+    teacherId: string,
+  ): Promise<ClassResponseDto> {
     if (!Types.ObjectId.isValid(id)) {
       throw new NotFoundException(`Class with ID ${id} not found`);
     }
@@ -156,11 +189,13 @@ export class ClassesService {
 
     // Apenas o professor proprietário pode adicionar alunos
     if (classEntity.teacher_id.toString() !== teacherId) {
-      throw new ForbiddenException('You do not have permission to modify this class');
+      throw new ForbiddenException(
+        'You do not have permission to modify this class',
+      );
     }
 
     // Validar e converter IDs
-    const newStudentIds = addStudentsDto.student_ids.map(id => {
+    const newStudentIds = addStudentsDto.student_ids.map((id) => {
       if (!Types.ObjectId.isValid(id)) {
         throw new BadRequestException(`Invalid student ID: ${id}`);
       }
@@ -168,8 +203,12 @@ export class ClassesService {
     });
 
     // Adicionar apenas IDs que ainda não existem
-    const existingIds = new Set(classEntity.student_ids.map(id => id.toString()));
-    const uniqueNewIds = newStudentIds.filter(id => !existingIds.has(id.toString()));
+    const existingIds = new Set(
+      classEntity.student_ids.map((id) => id.toString()),
+    );
+    const uniqueNewIds = newStudentIds.filter(
+      (id) => !existingIds.has(id.toString()),
+    );
 
     if (uniqueNewIds.length > 0) {
       classEntity.student_ids.push(...uniqueNewIds);
@@ -179,7 +218,11 @@ export class ClassesService {
     return this.toResponseDto(classEntity);
   }
 
-  async removeStudents(id: string, removeStudentsDto: RemoveStudentsDto, teacherId: string): Promise<ClassResponseDto> {
+  async removeStudents(
+    id: string,
+    removeStudentsDto: RemoveStudentsDto,
+    teacherId: string,
+  ): Promise<ClassResponseDto> {
     if (!Types.ObjectId.isValid(id)) {
       throw new NotFoundException(`Class with ID ${id} not found`);
     }
@@ -192,11 +235,13 @@ export class ClassesService {
 
     // Apenas o professor proprietário pode remover alunos
     if (classEntity.teacher_id.toString() !== teacherId) {
-      throw new ForbiddenException('You do not have permission to modify this class');
+      throw new ForbiddenException(
+        'You do not have permission to modify this class',
+      );
     }
 
     // Validar IDs
-    const idsToRemove = removeStudentsDto.student_ids.map(id => {
+    const idsToRemove = removeStudentsDto.student_ids.map((id) => {
       if (!Types.ObjectId.isValid(id)) {
         throw new BadRequestException(`Invalid student ID: ${id}`);
       }
@@ -206,7 +251,7 @@ export class ClassesService {
     // Remover IDs
     const idsToRemoveSet = new Set(idsToRemove);
     classEntity.student_ids = classEntity.student_ids.filter(
-      id => !idsToRemoveSet.has(id.toString())
+      (id) => !idsToRemoveSet.has(id.toString()),
     );
 
     await classEntity.save();
@@ -219,7 +264,9 @@ export class ClassesService {
       _id: classEntity._id.toString(),
       teacher_id: classEntity.teacher_id.toString(),
       name: classEntity.name,
-      student_ids: classEntity.student_ids.map((id: Types.ObjectId) => id.toString()),
+      student_ids: classEntity.student_ids.map((id: Types.ObjectId) =>
+        id.toString(),
+      ),
       students_count: classEntity.student_ids.length,
       org_id: classEntity.org_id,
       school_id: classEntity.school_id,

@@ -1,14 +1,28 @@
-import { IsString, IsOptional, IsArray, MinLength, MaxLength } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsArray,
+  MinLength,
+  MaxLength,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateClassDto {
-  @ApiProperty({ description: 'Nome da turma', example: 'Turma 3A - Matemática' })
+  @ApiProperty({
+    description: 'Nome da turma',
+    example: 'Turma 3A - Matemática',
+  })
   @IsString()
   @MinLength(1)
   @MaxLength(200)
   name!: string;
 
-  @ApiProperty({ description: 'IDs dos alunos da turma', required: false, type: [String], example: ['507f1f77bcf86cd799439011'] })
+  @ApiProperty({
+    description: 'IDs dos alunos da turma',
+    required: false,
+    type: [String],
+    example: ['507f1f77bcf86cd799439011'],
+  })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
