@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Brain } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -16,8 +17,11 @@ export default function Login() {
   const [name, setName] = useState('');
   const [role, setRole] = useState<'TEACHER' | 'STUDENT'>('STUDENT');
   const [isLoading, setIsLoading] = useState(false);
+  const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [isResetting, setIsResetting] = useState(false);
   
-  const { login, register, isAuthenticated, firebaseUser } = useAuth();
+  const { login, register, resetPassword, isAuthenticated, firebaseUser } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -73,6 +77,43 @@ export default function Login() {
     }
   };
 
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!resetEmail || !resetEmail.includes('@')) {
+      toast({
+        title: 'Email inválido',
+        description: 'Por favor, digite um email válido',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    setIsResetting(true);
+    
+    try {
+      console.log('🔄 Iniciando processo de reset de senha para:', resetEmail);
+      await resetPassword(resetEmail);
+      console.log('✅ Reset de senha processado com sucesso');
+      
+      setIsResetDialogOpen(false);
+      setResetEmail('');
+      toast({
+        title: 'Email enviado!',
+        description: 'Verifique sua caixa de entrada (e spam) para redefinir sua senha.',
+      });
+    } catch (error: any) {
+      console.error('❌ Erro no handleResetPassword:', error);
+      toast({
+        title: 'Erro ao enviar email',
+        description: error.message || 'Não foi possível enviar o email de recuperação',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10 p-4">
       <Card className="w-full max-w-md shadow-elevated">
@@ -113,6 +154,18 @@ export default function Login() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
+            </div>
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  setResetEmail(email);
+                  setIsResetDialogOpen(true);
+                }}
+                className="text-sm text-primary hover:underline"
+              >
+                Esqueci minha senha
+              </button>
             </div>
                 <Button type="submit" className="w-full" variant="gradient" disabled={isLoading}>
                   {isLoading ? 'Entrando...' : 'Entrar'}
@@ -183,6 +236,47 @@ export default function Login() {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Redefinir senha</DialogTitle>
+            <DialogDescription>
+              Digite seu email e enviaremos um link para redefinir sua senha.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleResetPassword}>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="reset-email">Email</Label>
+                <Input
+                  id="reset-email"
+                  type="email"
+                  placeholder="seu@email.com"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setIsResetDialogOpen(false);
+                  setResetEmail('');
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={isResetting}>
+                {isResetting ? 'Enviando...' : 'Enviar email'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

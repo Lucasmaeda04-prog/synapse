@@ -5,7 +5,8 @@ import {
   signOut,
   onAuthStateChanged,
   createUserWithEmailAndPassword,
-  updateProfile
+  updateProfile,
+  sendPasswordResetEmail
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 
@@ -23,6 +24,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name: string, role: 'TEACHER' | 'STUDENT') => Promise<void>;
   logout: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
   isAuthenticated: boolean;
   loading: boolean;
 }
@@ -154,13 +156,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const resetPassword = async (email: string) => {
+    try {
+      // Configurar a URL de redirecionamento após reset de senha
+      const actionCodeSettings = {
+        url: `${window.location.origin}/login`,
+        handleCodeInApp: false,
+      };
+      
+      console.log('📧 Enviando email de reset de senha para:', email);
+      await sendPasswordResetEmail(auth, email, actionCodeSettings);
+      console.log('✅ Email de reset enviado com sucesso');
+    } catch (error: any) {
+      console.error('❌ Erro ao enviar email de reset:', error);
+      // Melhorar mensagens de erro
+      let errorMessage = 'Não foi possível enviar o email de recuperação';
+      
+      if (error.code === 'auth/user-not-found') {
+        errorMessage = 'Nenhuma conta encontrada com este email';
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = 'Email inválido';
+      } else if (error.code === 'auth/too-many-requests') {
+        errorMessage = 'Muitas tentativas. Tente novamente mais tarde';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      throw new Error(errorMessage);
+    }
+  };
+
   return (
     <AuthContext.Provider value={{ 
       user, 
       firebaseUser, 
       login, 
       register, 
-      logout, 
+      logout,
+      resetPassword,
       isAuthenticated: !!user,
       loading 
     }}>
