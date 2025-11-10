@@ -30,4 +30,3 @@ AssignmentSchema.index(
   { deck_id: 1, student_id: 1 },
   { unique: true, partialFilterExpression: { student_id: { $exists: true } } },
 );
-

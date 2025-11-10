@@ -35,4 +35,3 @@ export class Card {
 export const CardSchema = SchemaFactory.createForClass(Card);
 
 CardSchema.index({ deck_id: 1 });
-

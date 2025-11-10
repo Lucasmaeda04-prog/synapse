@@ -45,4 +45,3 @@ export const ReviewSchema = SchemaFactory.createForClass(Review);
 ReviewSchema.index({ student_id: 1, card_id: 1 }, { unique: true });
 ReviewSchema.index({ student_id: 1, next_due_at: 1 });
 ReviewSchema.index({ deck_id: 1, student_id: 1 });
-
