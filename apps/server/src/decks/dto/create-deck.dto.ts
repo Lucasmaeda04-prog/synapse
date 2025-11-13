@@ -5,8 +5,11 @@ import {
   IsArray,
   MinLength,
   MaxLength,
+  ValidateNested,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
+import { CreateCardDto } from '../../cards/dto/create-card.dto';
 
 export class CreateDeckDto {
   @ApiProperty({ description: 'Título do deck', example: 'Matemática Básica' })
@@ -54,4 +57,16 @@ export class CreateDeckDto {
   @IsOptional()
   @IsString()
   school_id?: string;
+
+  @ApiProperty({
+    description:
+      'Cards iniciais do deck (opcional). Se informado, serão criados junto com o deck',
+    required: false,
+    type: [CreateCardDto],
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateCardDto)
+  cards?: CreateCardDto[];
 }

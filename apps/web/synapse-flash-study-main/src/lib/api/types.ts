@@ -23,6 +23,7 @@ export interface CreateDeckDto {
   is_public?: boolean;
   org_id?: string;
   school_id?: string;
+  cards?: CreateCardDto[];
 }
 
 export interface UpdateDeckDto {

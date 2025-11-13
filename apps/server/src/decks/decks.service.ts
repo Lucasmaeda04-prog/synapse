@@ -18,6 +18,8 @@ import {
   PaginatedDecksResponseDto,
   DeckResponseDto,
 } from './dto/deck-response.dto';
+import { Card, CardDocument } from '../database/schemas/card.schema';
+import { CreateCardDto } from '../cards/dto/create-card.dto';
 
 @Injectable()
 export class DecksService {
@@ -26,20 +28,65 @@ export class DecksService {
     @InjectModel(Assignment.name)
     private assignmentModel: Model<AssignmentDocument>,
     @InjectModel(Class.name) private classModel: Model<ClassDocument>,
+    @InjectModel(Card.name) private cardModel: Model<CardDocument>,
   ) {}
 
   async create(
     createDeckDto: CreateDeckDto,
     ownerId: string,
   ): Promise<DeckResponseDto> {
-    const deck = new this.deckModel({
-      ...createDeckDto,
-      owner_id: new Types.ObjectId(ownerId),
-      cards_count: 0,
-    });
+    // Extract cards if provided so they are not directly set on deck document
+    const { cards, ...deckPayload } = createDeckDto as any;
 
-    const savedDeck = await deck.save();
-    return this.toResponseDto(savedDeck);
+    // Start a mongoose session for transaction
+    const session = await this.deckModel.db.startSession();
+    session.startTransaction();
+
+    try {
+      const deck = new this.deckModel({
+        ...deckPayload,
+        owner_id: new Types.ObjectId(ownerId),
+        cards_count: 0,
+      });
+
+      const savedDeck = await deck.save({ session });
+
+      // If cards were provided, insert them and update cards_count within transaction
+      if (Array.isArray(cards) && cards.length > 0) {
+        const cardsToInsert: Partial<Card>[] = cards.map(
+          (c: CreateCardDto) => ({
+            deck_id: new Types.ObjectId(savedDeck._id),
+            front: c.front,
+            back: c.back,
+            hints: c.hints || [],
+          }),
+        );
+
+        await this.cardModel.insertMany(cardsToInsert as any, { session });
+
+        await this.deckModel.findByIdAndUpdate(
+          savedDeck._id,
+          { $inc: { cards_count: cardsToInsert.length } },
+          { session },
+        );
+      }
+
+      await session.commitTransaction();
+      session.endSession();
+
+      // Return the deck (fresh read)
+      const result = await this.deckModel.findById(savedDeck._id).lean().exec();
+      return this.toResponseDto(result);
+    } catch (err) {
+      // Abort transaction on error
+      try {
+        await session.abortTransaction();
+      } catch (e) {
+        // ignore
+      }
+      session.endSession();
+      throw err;
+    }
   }
 
   async findAll(

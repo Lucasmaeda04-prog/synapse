@@ -1,9 +1,16 @@
-import { ReactNode } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Brain, LayoutDashboard, BookOpen, Users, LogOut, TrendingUp } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { ReactNode } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import {
+  Brain,
+  LayoutDashboard,
+  BookOpen,
+  Users,
+  LogOut,
+  TrendingUp,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -16,33 +23,33 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate("/login");
   };
 
   const getRoleLabel = () => {
-    if (!user?.role) return 'Usuário';
+    if (!user?.role) return "Usuário";
     switch (user.role) {
-      case 'ADMIN':
-        return 'Administrador';
-      case 'TEACHER':
-        return 'Professor';
-      case 'STUDENT':
-        return 'Aluno';
+      case "ADMIN":
+        return "Administrador";
+      case "TEACHER":
+        return "Professor";
+      case "STUDENT":
+        return "Aluno";
       default:
-        return 'Usuário';
+        return "Usuário";
     }
   };
 
   const allNavItems = [
-    { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { to: '/decks', label: 'Decks', icon: BookOpen },
-    { to: '/classes', label: 'Turmas', icon: Users },
-    { to: '/reports', label: 'Relatórios', icon: TrendingUp },
+    { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { to: "/decks", label: "Decks", icon: BookOpen },
+    { to: "/classes", label: "Turmas", icon: Users },
+    { to: "/reports", label: "Relatórios", icon: TrendingUp },
   ];
 
   const navItems = allNavItems.filter((item) => {
-    if (item.to === '/reports') {
-      return user?.role === 'TEACHER' || user?.role === 'ADMIN';
+    if (item.to === "/reports") {
+      return user?.role === "TEACHER" || user?.role === "ADMIN";
     }
     return true;
   });
@@ -60,19 +67,23 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             </Link>
 
             <div className="hidden md:flex items-center space-x-1">
-              {navItems.map((item) => (
-                <Link key={item.to} to={item.to}>
-                  <Button
-                    variant="ghost"
-                    className={cn(
-                      location.pathname === item.to && 'bg-primary/10 text-primary'
-                    )}
-                  >
-                    <item.icon className="mr-2 h-4 w-4" />
-                    {item.label}
-                  </Button>
-                </Link>
-              ))}
+              {navItems.map((item) => {
+                const isActive =
+                  location.pathname === item.to ||
+                  location.pathname.startsWith(item.to + "/");
+
+                return (
+                  <Link key={item.to} to={item.to}>
+                    <Button
+                      variant="ghost"
+                      className={cn(isActive && "bg-primary/10 text-primary")}
+                    >
+                      <item.icon className="mr-2 h-4 w-4" />
+                      {item.label}
+                    </Button>
+                  </Link>
+                );
+              })}
             </div>
 
             <div className="flex items-center space-x-4">
@@ -89,27 +100,31 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
 
           <div className="flex md:hidden items-center space-x-1 mt-4">
-            {navItems.map((item) => (
-              <Link key={item.to} to={item.to} className="flex-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={cn(
-                    'w-full',
-                    location.pathname === item.to && 'bg-primary/10 text-primary'
-                  )}
-                >
-                  <item.icon className="h-4 w-4" />
-                </Button>
-              </Link>
-            ))}
+            {navItems.map((item) => {
+              const isActive =
+                location.pathname === item.to ||
+                location.pathname.startsWith(item.to + "/");
+
+              return (
+                <Link key={item.to} to={item.to} className="flex-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={cn(
+                      "w-full",
+                      isActive && "bg-primary/10 text-primary"
+                    )}
+                  >
+                    <item.icon className="h-4 w-4" />
+                  </Button>
+                </Link>
+              );
+            })}
           </div>
         </div>
       </nav>
 
-      <main className="container mx-auto px-4 py-8">
-        {children}
-      </main>
+      <main className="container mx-auto px-4 py-8">{children}</main>
     </div>
   );
 }
