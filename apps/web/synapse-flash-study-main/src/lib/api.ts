@@ -12,6 +12,9 @@ import type {
   PaginatedClassesResponse,
   AddStudentsDto,
   RemoveStudentsDto,
+  Assignment,
+  CreateAssignmentDto,
+  QueryAssignmentDto,
 } from './api/types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
@@ -24,7 +27,7 @@ export async function getAuthToken(): Promise<string | null> {
 
 export async function apiRequest<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
 ): Promise<T> {
   const token = await getAuthToken();
   
@@ -48,6 +51,25 @@ export async function apiRequest<T>(
   }
 
   return response.json();
+}
+
+function buildQueryString(params?: Record<string, unknown>): string {
+  if (!params) return '';
+  const searchParams = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (
+      value !== undefined &&
+      value !== null &&
+      (typeof value === 'string' ||
+        typeof value === 'number' ||
+        typeof value === 'boolean')
+    ) {
+      searchParams.append(key, String(value));
+    }
+  });
+
+  const query = searchParams.toString();
+  return query ? `?${query}` : '';
 }
 
 // Funções específicas da API
@@ -81,10 +103,13 @@ export const api = {
       const result = await response.json();
       console.log('✅ Usuário criado com sucesso:', result);
       return result;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('❌ Erro ao criar usuário:', error);
       // Re-throw para que o AuthContext possa tratar
-      throw error;
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Falha ao criar usuário.');
     }
   },
   
@@ -98,7 +123,7 @@ export const api = {
 // API para Decks
 export const decksApi = {
   list: (params?: QueryDeckDto): Promise<PaginatedDecksResponse> => {
-    const queryString = params ? `?${new URLSearchParams(params as any).toString()}` : '';
+    const queryString = buildQueryString(params as Record<string, unknown>);
     return apiRequest<PaginatedDecksResponse>(`/decks${queryString}`);
   },
   getById: (id: string): Promise<Deck> => {
@@ -118,7 +143,7 @@ export const decksApi = {
 // API para Classes
 export const classesApi = {
   list: (params?: QueryClassDto): Promise<PaginatedClassesResponse> => {
-    const queryString = params ? `?${new URLSearchParams(params as any).toString()}` : '';
+    const queryString = buildQueryString(params as Record<string, unknown>);
     return apiRequest<PaginatedClassesResponse>(`/classes${queryString}`);
   },
   getById: (id: string): Promise<Class> => {
@@ -141,3 +166,20 @@ export const classesApi = {
   },
 };
 
+export const assignmentsApi = {
+  list: (params?: QueryAssignmentDto): Promise<Assignment[]> => {
+    const queryString = buildQueryString(params as Record<string, unknown>);
+    return apiRequest<Assignment[]>(`/assignments${queryString}`);
+  },
+  create: (data: CreateAssignmentDto): Promise<Assignment> => {
+    return apiRequest<Assignment>('/assignments', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+  delete: (id: string): Promise<{ message: string }> => {
+    return apiRequest<{ message: string }>(`/assignments/${id}`, {
+      method: 'DELETE',
+    });
+  },
+};

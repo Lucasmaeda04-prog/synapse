@@ -99,6 +99,31 @@ export interface PaginatedClassesResponse {
   totalPages: number;
 }
 
+// ============= ASSIGNMENTS =============
+
+export interface Assignment {
+  _id: string;
+  deck_id: string;
+  class_id?: string | null;
+  student_id?: string | null;
+  due_date?: Date | null;
+  created_at: Date;
+  deck?: Deck;
+}
+
+export interface CreateAssignmentDto {
+  deck_id: string;
+  class_id?: string;
+  student_id?: string;
+  due_date?: string;
+}
+
+export interface QueryAssignmentDto {
+  class_id?: string;
+  student_id?: string;
+  deck_id?: string;
+}
+
 // ============= CARDS =============
 
 export interface Card {

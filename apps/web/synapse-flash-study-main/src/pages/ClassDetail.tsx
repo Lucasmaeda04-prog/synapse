@@ -25,6 +25,23 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import {
   useClass,
   useUpdateClass,
   useDeleteClass,
@@ -32,7 +49,16 @@ import {
   useRemoveStudents,
 } from "@/hooks/api/useClasses";
 import {
+  useAssignDeckToClass,
+  useClassAssignments,
+  useRemoveAssignment,
+} from "@/hooks/api/useAssignments";
+import { useDecks } from "@/hooks/api/useDecks";
+import {
   AlertCircle,
+  BookMarked,
+  CalendarClock,
+  Link2,
   Loader2,
   Pencil,
   Trash2,
@@ -41,7 +67,7 @@ import {
 } from "lucide-react";
 
 export default function ClassDetail() {
-  const { classId } = useParams();
+  const { classId: routeClassId } = useParams();
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
@@ -52,13 +78,29 @@ export default function ClassDetail() {
   // Estados para adicionar/remover alunos
   const [newStudentEmail, setNewStudentEmail] = useState("");
   const [studentToRemove, setStudentToRemove] = useState<string | null>(null);
+  const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
+  const [selectedDeckId, setSelectedDeckId] = useState("");
+  const [assignmentDueDate, setAssignmentDueDate] = useState("");
+  const [assignmentBeingRemoved, setAssignmentBeingRemoved] = useState<string | null>(null);
 
   // Buscar turma da API
-  const { data: klass, isLoading, isError, error } = useClass(classId || "");
+  const { data: klass, isLoading, isError, error } = useClass(routeClassId || "");
   const updateClass = useUpdateClass();
   const deleteClass = useDeleteClass();
   const addStudents = useAddStudents();
   const removeStudents = useRemoveStudents();
+  const {
+    data: assignments,
+    isLoading: isAssignmentsLoading,
+    isError: isAssignmentsError,
+    error: assignmentsError,
+  } = useClassAssignments(routeClassId || "");
+  const assignDeck = useAssignDeckToClass();
+  const removeAssignment = useRemoveAssignment();
+  const { data: decksData, isLoading: isDecksLoading } = useDecks({
+    page: 1,
+    limit: 100,
+  });
 
   if (!isAuthenticated) return <Navigate to="/login" />;
 
@@ -96,6 +138,9 @@ export default function ClassDetail() {
 
   // TODO: Quando integrar auth real, validar: klass.teacher_id === user?.id
   const canEdit = user?.role === "TEACHER"; // Por enquanto, qualquer professor pode editar
+  const assignedDecks = assignments || [];
+  const availableDecks = decksData?.data || [];
+  const currentClassId = klass._id || routeClassId || "";
 
   const handleEdit = () => {
     setEditName(klass.name);
@@ -104,11 +149,11 @@ export default function ClassDetail() {
 
   const handleSaveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!classId) return;
+    if (!routeClassId) return;
 
     try {
       await updateClass.mutateAsync({
-        id: classId,
+        id: routeClassId,
         data: { name: editName },
       });
       setIsEditing(false);
@@ -118,9 +163,9 @@ export default function ClassDetail() {
   };
 
   const handleDelete = async () => {
-    if (!classId) return;
+    if (!routeClassId) return;
     try {
-      await deleteClass.mutateAsync(classId);
+      await deleteClass.mutateAsync(routeClassId);
       navigate("/classes");
     } catch (error) {
       console.error("Erro ao deletar turma:", error);
@@ -134,13 +179,13 @@ export default function ClassDetail() {
 
   const handleAddStudent = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!classId || !newStudentEmail.trim()) return;
+    if (!routeClassId || !newStudentEmail.trim()) return;
 
     try {
       // Por enquanto, vamos simular que o email é o ID do aluno
       // Em produção, você precisaria de um endpoint para buscar aluno por email
       await addStudents.mutateAsync({
-        id: classId,
+        id: routeClassId,
         data: { student_ids: [newStudentEmail.trim()] },
       });
       setNewStudentEmail("");
@@ -150,16 +195,53 @@ export default function ClassDetail() {
   };
 
   const handleRemoveStudent = async (studentId: string) => {
-    if (!classId) return;
+    if (!routeClassId) return;
 
     try {
       await removeStudents.mutateAsync({
-        id: classId,
+        id: routeClassId,
         data: { student_ids: [studentId] },
       });
       setStudentToRemove(null);
     } catch (error) {
       console.error("Erro ao remover aluno:", error);
+    }
+  };
+
+  const handleAssignDeck = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentClassId || !selectedDeckId) return;
+
+    try {
+      const dueDateIso = assignmentDueDate
+        ? new Date(`${assignmentDueDate}T23:59:59.999`).toISOString()
+        : undefined;
+
+      await assignDeck.mutateAsync({
+        deck_id: selectedDeckId,
+        class_id: currentClassId,
+        ...(dueDateIso ? { due_date: dueDateIso } : {}),
+      });
+      setSelectedDeckId("");
+      setAssignmentDueDate("");
+      setIsAssignDialogOpen(false);
+    } catch (error) {
+      console.error("Erro ao atribuir deck:", error);
+    }
+  };
+
+  const handleRemoveAssignment = async (assignmentId: string) => {
+    if (!currentClassId) return;
+    try {
+      setAssignmentBeingRemoved(assignmentId);
+      await removeAssignment.mutateAsync({
+        assignmentId,
+        classId: currentClassId,
+      });
+    } catch (error) {
+      console.error("Erro ao remover assignment:", error);
+    } finally {
+      setAssignmentBeingRemoved(null);
     }
   };
 
@@ -173,7 +255,7 @@ export default function ClassDetail() {
               {!isEditing ? (
                 <>
                   <CardTitle>{klass.name}</CardTitle>
-                  <CardDescription>
+                  <CardDescription className="mt-2 text-sm text-muted-foreground">
                     Criada em{" "}
                     {new Date(klass.created_at).toLocaleDateString("pt-BR")}
                   </CardDescription>
@@ -359,17 +441,216 @@ export default function ClassDetail() {
         </CardContent>
       </Card>
 
-      {/* Card de Decks Atribuídos - TODO */}
+      {/* Card de Decks Atribuídos */}
       <Card className="shadow-card">
-        <CardHeader>
-          <CardTitle>Decks Atribuídos</CardTitle>
-          <CardDescription>Vincule decks à turma (assignments)</CardDescription>
+        <CardHeader className="space-y-4">
+          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+            <div className="space-y-2">
+              <CardTitle>Decks Atribuídos</CardTitle>
+              <CardDescription className="text-muted-foreground">
+                Gerencie os decks publicados para os alunos desta turma
+              </CardDescription>
+            </div>
+            {canEdit && (
+              <Dialog
+                open={isAssignDialogOpen}
+                onOpenChange={(open) => {
+                  setIsAssignDialogOpen(open);
+                  if (!open) {
+                    setSelectedDeckId("");
+                    setAssignmentDueDate("");
+                  }
+                }}
+              >
+                <DialogTrigger asChild>
+                  <Button variant="gradient" size="sm">
+                    Atribuir Deck
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-lg">
+                  <DialogHeader>
+                    <DialogTitle>Atribuir deck à turma</DialogTitle>
+                    <DialogDescription>
+                      Escolha um dos seus decks para disponibilizar aos alunos.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <form className="space-y-5" onSubmit={handleAssignDeck}>
+                    <div className="space-y-2">
+                      <Label>Deck</Label>
+                      <Select
+                        value={selectedDeckId}
+                        onValueChange={setSelectedDeckId}
+                        disabled={
+                          assignDeck.isPending ||
+                          isDecksLoading ||
+                          availableDecks.length === 0
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue
+                            placeholder={
+                              isDecksLoading
+                                ? "Carregando decks..."
+                                : "Selecione um deck"
+                            }
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableDecks.map((deck) => (
+                            <SelectItem key={deck._id} value={deck._id}>
+                              {deck.title} ({deck.cards_count} cards)
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {!isDecksLoading && availableDecks.length === 0 && (
+                        <p className="text-xs text-muted-foreground">
+                          Você ainda não possui decks cadastrados.
+                        </p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="due-date">Data limite (opcional)</Label>
+                      <Input
+                        id="due-date"
+                        type="date"
+                        value={assignmentDueDate}
+                        onChange={(e) => setAssignmentDueDate(e.target.value)}
+                        disabled={assignDeck.isPending}
+                      />
+                    </div>
+                    <DialogFooter>
+                      <Button
+                        type="submit"
+                        variant="gradient"
+                        disabled={
+                          assignDeck.isPending ||
+                          !selectedDeckId ||
+                          availableDecks.length === 0
+                        }
+                      >
+                        {assignDeck.isPending && (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        )}
+                        Confirmar
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="text-sm text-muted-foreground">
-            Funcionalidade de atribuição de decks será implementada na próxima
-            etapa (Assignments).
-          </div>
+          {isAssignmentsLoading ? (
+            <div className="space-y-3">
+              {[1, 2].map((skeleton) => (
+                <Skeleton key={skeleton} className="h-24 w-full" />
+              ))}
+            </div>
+          ) : isAssignmentsError ? (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                {assignmentsError instanceof Error
+                  ? assignmentsError.message
+                  : "Não foi possível carregar os decks atribuídos."}
+              </AlertDescription>
+            </Alert>
+          ) : assignedDecks.length === 0 ? (
+            <div className="text-sm text-muted-foreground">
+              Nenhum deck foi atribuído a esta turma ainda.
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {assignedDecks.map((assignment) => (
+                <div
+                  key={assignment._id}
+                  className="rounded-lg border border-border p-4"
+                >
+                  <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <div className="space-y-3">
+                      <div className="flex items-start gap-3">
+                        <BookMarked className="h-5 w-5 text-primary" />
+                        <div>
+                          <p className="font-semibold">
+                            {assignment.deck?.title || "Deck sem título"}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {assignment.deck?.description ||
+                              "Esse deck não possui descrição."}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {assignment.deck?.tags?.length ? (
+                          assignment.deck.tags.map((tag) => (
+                            <Badge
+                              key={`${assignment._id}-${tag}`}
+                              variant="secondary"
+                            >
+                              #{tag}
+                            </Badge>
+                          ))
+                        ) : (
+                          <Badge variant="outline">Sem tags</Badge>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <CalendarClock className="h-4 w-4" />
+                          Publicado em{" "}
+                          {new Date(assignment.created_at).toLocaleDateString(
+                            "pt-BR",
+                          )}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Link2 className="h-4 w-4" />
+                          {assignment.due_date
+                            ? `Disponível até ${new Date(
+                                assignment.due_date,
+                              ).toLocaleDateString("pt-BR")}`
+                            : "Sem data limite"}
+                        </span>
+                        {typeof assignment.deck?.cards_count === "number" && (
+                          <span>{assignment.deck.cards_count} cards</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-stretch gap-2 md:items-end">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate(`/decks/${assignment.deck_id}`)}
+                      >
+                        Ver deck
+                      </Button>
+                      {canEdit && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => handleRemoveAssignment(assignment._id)}
+                          disabled={
+                            removeAssignment.isPending &&
+                            assignmentBeingRemoved === assignment._id
+                          }
+                        >
+                          {removeAssignment.isPending &&
+                          assignmentBeingRemoved === assignment._id ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="mr-2 h-4 w-4" />
+                          )}
+                          Remover
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

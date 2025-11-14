@@ -19,20 +19,17 @@ import { useClasses } from "@/hooks/api/useClasses";
 export default function Classes() {
   const { user, isAuthenticated } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
+  const { data, isLoading, isError, error } = useClasses({
+    query: searchTerm || undefined,
+    page: 1,
+    limit: 20,
+  });
 
   if (!isAuthenticated) {
     return <Navigate to="/login" />;
   }
 
   const isTeacher = user?.role === "TEACHER" || user?.role === "ADMIN";
-
-  // Buscar classes da API - movido para ANTES dos early returns de loading/error
-  // para evitar que o componente re-renderize e perca o foco do input
-  const { data, isLoading, isError, error } = useClasses({
-    query: searchTerm || undefined,
-    page: 1,
-    limit: 20,
-  });
   
   // Filtrar classes: professores veem suas turmas, alunos veem turmas onde estão matriculados
   const allClasses = data?.data || [];
@@ -142,28 +139,26 @@ export default function Classes() {
               key={cls._id}
               className="shadow-card hover:shadow-elevated transition-all"
             >
-              <CardHeader>
+              <CardHeader className="space-y-3">
                 <div className="flex items-start justify-between">
-                  <Users className="h-8 w-8 text-primary mb-2" />
+                  <Users className="h-8 w-8 text-primary" />
                   <Badge variant="secondary">{cls.students_count} alunos</Badge>
                 </div>
                 <CardTitle className="hover:text-primary transition-colors">
                   {cls.name}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex items-center text-sm">
-                    <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">
-                      Criada em{" "}
-                      {new Date(cls.created_at).toLocaleDateString("pt-BR")}
-                    </span>
-                  </div>
+              <CardContent className="space-y-5">
+                <div className="flex items-center text-sm text-muted-foreground">
+                  <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
+                  <span>
+                    Criada em{" "}
+                    {new Date(cls.created_at).toLocaleDateString("pt-BR")}
+                  </span>
                 </div>
 
                 <Link to={`/classes/${cls._id}`}>
-                  <Button variant="outline" className="w-full">
+                  <Button variant="outline" className="w-full mt-4">
                     Ver Detalhes
                   </Button>
                 </Link>

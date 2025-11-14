@@ -12,13 +12,14 @@ import { UsersModule } from './users/users.module';
 import { DecksModule } from './decks/decks.module';
 import { ClassesModule } from './classes/classes.module';
 import { CardsModule } from './cards/cards.module';
+import { AssignmentsModule } from './assignments/assignments.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     MongooseModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: async (cfg: ConfigService) => ({
+      useFactory: (cfg: ConfigService) => ({
         uri: cfg.get<string>('MONGODB_URI'),
         // Ajustes comuns de conexão; adapte conforme ambiente
         serverSelectionTimeoutMS: 5000,
@@ -32,6 +33,7 @@ import { CardsModule } from './cards/cards.module';
     DecksModule,
     ClassesModule,
     CardsModule,
+    AssignmentsModule,
   ],
   controllers: [AppController, HealthController, AuthController],
   providers: [AppService, HealthService],
