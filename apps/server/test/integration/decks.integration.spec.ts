@@ -4,16 +4,17 @@ import request from 'supertest';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
-import { ClassesModule } from '../../src/classes/classes.module';
+import { DecksModule } from '../../src/decks/decks.module';
 import { FirebaseAuthGuard } from '../../src/auth/firebase-auth.guard';
+import { RolesGuard } from '../../src/auth/roles.guard';
 
-// aumentar timeout porque mongodb-memory-server pode demorar para baixar/initializar
 jest.setTimeout(60000);
 
-describe('Classes - Integration (module)', () => {
+describe('Decks - Integration (module)', () => {
   let app: INestApplication | undefined;
   let mongod: MongoMemoryServer | undefined;
   let server: any;
+
   const teacherHex = new Types.ObjectId().toHexString();
 
   const fakeAuthGuard = {
@@ -23,6 +24,7 @@ describe('Classes - Integration (module)', () => {
       return true;
     },
   };
+  const allowRolesGuard = { canActivate: () => true };
 
   beforeAll(async () => {
     mongod = await MongoMemoryServer.create();
@@ -31,11 +33,11 @@ describe('Classes - Integration (module)', () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [
         MongooseModule.forRoot(uri),
-        ClassesModule, // apenas o módulo sob teste
+        DecksModule, // apenas o módulo sob teste
       ],
     })
-      .overrideGuard(FirebaseAuthGuard)
-      .useValue(fakeAuthGuard)
+      .overrideGuard(FirebaseAuthGuard).useValue(fakeAuthGuard)
+      .overrideGuard(RolesGuard).useValue(allowRolesGuard)
       .compile();
 
     app = moduleFixture.createNestApplication();
@@ -51,33 +53,36 @@ describe('Classes - Integration (module)', () => {
 
   let createdId: string;
 
-  it('POST /classes -> cria classe', async () => {
-    const payload = { name: 'Integration Turma' };
-    const res = await request(server).post('/classes').send(payload).expect(201);
+  it('POST /decks -> cria deck', async () => {
+    const payload = { title: 'Deck Integração', tags: ['tag1'] };
+    const res = await request(server).post('/decks').send(payload).expect(201);
     expect(res.body).toHaveProperty('_id');
-    expect(res.body).toMatchObject({ name: 'Integration Turma' });
+    expect(res.body).toMatchObject({ title: 'Deck Integração', tags: ['tag1'] });
     createdId = res.body._id;
   });
 
-  it('GET /classes -> lista classes (paginação básica)', async () => {
-    const res = await request(server).get('/classes').expect(200);
+  it('GET /decks -> lista (pagina)', async () => {
+    const res = await request(server).get('/decks').expect(200);
     const list = res.body.data || res.body;
     expect(Array.isArray(list)).toBe(true);
-    expect(list.some((c: any) => String(c._id) === String(createdId))).toBe(true);
+    expect(list.some((d: any) => String(d._id) === String(createdId))).toBe(true);
   });
 
-  it('GET /classes/:id -> retorna classe', async () => {
-    const res = await request(server).get(`/classes/${createdId}`).expect(200);
+  it('GET /decks/:id -> retorna deck', async () => {
+    const res = await request(server).get(`/decks/${createdId}`).expect(200);
     expect(res.body).toHaveProperty('_id', createdId);
   });
 
-  it('PATCH /classes/:id -> atualiza classe', async () => {
-    const res = await request(server).patch(`/classes/${createdId}`).send({ name: 'Updated' }).expect(200);
-    expect(res.body).toHaveProperty('name', 'Updated');
+  it('PATCH /decks/:id -> atualiza', async () => {
+    const res = await request(server)
+      .patch(`/decks/${createdId}`)
+      .send({ title: 'Atualizado' })
+      .expect(200);
+    expect(res.body).toHaveProperty('title', 'Atualizado');
   });
 
-  it('DELETE /classes/:id -> remove classe', async () => {
-    const res = await request(server).delete(`/classes/${createdId}`).expect(200);
-    expect(res.body).toEqual({ message: 'Class deleted successfully' });
+  it('DELETE /decks/:id -> remove', async () => {
+    const res = await request(server).delete(`/decks/${createdId}`).expect(200);
+    expect(res.body).toEqual({ message: 'Deck deleted successfully' });
   });
 });
