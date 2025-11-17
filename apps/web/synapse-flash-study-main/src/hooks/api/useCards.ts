@@ -9,6 +9,7 @@ export function useCards(deckId: string) {
     queryKey: ["cards", deckId],
     queryFn: () => cardsApi.listByDeck(deckId),
     staleTime: 30000, // 30 segundos
+    enabled: !!deckId,
   });
 }
 
