@@ -1,10 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
-import { AppModule } from '../src/app.module';
+import { AppModule } from '../../src/app.module';
 import { MongoMemoryServer } from 'mongodb-memory-server';
-import { FirebaseAuthGuard } from '../src/auth/firebase-auth.guard';
-import { RolesGuard } from '../src/auth/roles.guard';
+import { FirebaseAuthGuard } from '../../src/auth/firebase-auth.guard';
+import { RolesGuard } from '../../src/auth/roles.guard';
 
 jest.setTimeout(60000);
 

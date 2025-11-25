@@ -1,0 +1,358 @@
+
+> server@0.0.1 test:all
+> npm run test && npm run test:e2e --runInBand --verbose
+
+
+> server@0.0.1 test
+> jest
+
+PASS test/unit/app.controller.spec.ts
+PASS test/unit/classes.service.spec.ts
+  ● Console
+
+    console.log
+      [ClassesService] Filter aplicado: {}
+
+      at ClassesService.findAll (src/classes/classes.service.ts:113:13)
+
+    console.log
+      [ClassesService] Resultado: { total: 1, returned: 1 }
+
+      at ClassesService.findAll (src/classes/classes.service.ts:126:13)
+
+    console.log
+      [ClassesService] Primeira turma encontrada - _id: { toString: [Function: toString] } teacher_id: { toString: [Function: toString] }
+
+      at ClassesService.findAll (src/classes/classes.service.ts:128:15)
+
+    console.log
+      [ClassesService] Criando turma - teacherId (string): 69250ec478195becd4b0e183 teacherObjectId: 69250ec478195becd4b0e183
+
+      at ClassesService.create (src/classes/classes.service.ts:38:13)
+
+    console.log
+      [ClassesService] Turma criada - _id: 69250ec478195becd4b0e185 teacher_id: 69250ec478195becd4b0e183
+
+      at ClassesService.create (src/classes/classes.service.ts:47:13)
+
+PASS test/unit/decks.service.spec.ts
+PASS test/unit/firebase-auth.guard.spec.ts
+PASS test/unit/cards.service.spec.ts
+PASS test/unit/decks.controller.spec.ts
+PASS test/unit/cards.controller.spec.ts
+PASS test/unit/classes.controller.spec.ts
+  ● Console
+
+    console.log
+      [ClassesController] Listando turmas - userId: 1 role: teacher tipo userId: string
+
+      at ClassesController.findAll (src/classes/classes.controller.ts:87:13)
+
+    console.log
+      [ClassesController] Criando turma com teacherId: 1 tipo: string
+
+      at ClassesController.create (src/classes/classes.controller.ts:64:13)
+
+PASS test/integration/classes.integration.spec.ts
+  ● Console
+
+    console.warn
+      ⚠️  Firebase Admin não configurado. Variáveis de ambiente faltando.
+
+      25 |       // Se as variáveis não estiverem configuradas, não inicializa
+      26 |       if (!projectId || !privateKey || !clientEmail) {
+    > 27 |         console.warn(
+         |                 ^
+      28 |           '⚠️  Firebase Admin não configurado. Variáveis de ambiente faltando.',
+      29 |         );
+      30 |         console.warn(
+
+      at FirebaseService.initializeFirebase (src/auth/firebase.service.ts:27:17)
+      at FirebaseService.onModuleInit (src/auth/firebase.service.ts:12:10)
+      at MapIterator.iteratee (node_modules/@nestjs/core/hooks/on-module-init.hook.js:22:43)
+      at MapIterator.next (node_modules/iterare/src/map.ts:9:39)
+      at IteratorWithOperators.next (node_modules/iterare/src/iterate.ts:19:28)
+          at Function.from (<anonymous>)
+      at IteratorWithOperators.toArray (node_modules/iterare/src/iterate.ts:227:22)
+      at callOperator (node_modules/@nestjs/core/hooks/on-module-init.hook.js:23:10)
+      at callModuleInitHook (node_modules/@nestjs/core/hooks/on-module-init.hook.js:43:23)
+      at Proxy.callInitHook (node_modules/@nestjs/core/nest-application-context.js:242:50)
+      at Proxy.init (node_modules/@nestjs/core/nest-application.js:103:9)
+      at Object.<anonymous> (test/integration/classes.integration.spec.ts:43:5)
+
+    console.warn
+         Configure FIREBASE_PROJECT_ID, FIREBASE_PRIVATE_KEY e FIREBASE_CLIENT_EMAIL no .env
+
+      28 |           '⚠️  Firebase Admin não configurado. Variáveis de ambiente faltando.',
+      29 |         );
+    > 30 |         console.warn(
+         |                 ^
+      31 |           '   Configure FIREBASE_PROJECT_ID, FIREBASE_PRIVATE_KEY e FIREBASE_CLIENT_EMAIL no .env',
+      32 |         );
+      33 |         return;
+
+      at FirebaseService.initializeFirebase (src/auth/firebase.service.ts:30:17)
+      at FirebaseService.onModuleInit (src/auth/firebase.service.ts:12:10)
+      at MapIterator.iteratee (node_modules/@nestjs/core/hooks/on-module-init.hook.js:22:43)
+      at MapIterator.next (node_modules/iterare/src/map.ts:9:39)
+      at IteratorWithOperators.next (node_modules/iterare/src/iterate.ts:19:28)
+          at Function.from (<anonymous>)
+      at IteratorWithOperators.toArray (node_modules/iterare/src/iterate.ts:227:22)
+      at callOperator (node_modules/@nestjs/core/hooks/on-module-init.hook.js:23:10)
+      at callModuleInitHook (node_modules/@nestjs/core/hooks/on-module-init.hook.js:43:23)
+      at Proxy.callInitHook (node_modules/@nestjs/core/nest-application-context.js:242:50)
+      at Proxy.init (node_modules/@nestjs/core/nest-application.js:103:9)
+      at Object.<anonymous> (test/integration/classes.integration.spec.ts:43:5)
+
+    console.log
+      [ClassesController] Criando turma com teacherId: 69250ec453c41820d1cac744 tipo: string
+
+      at ClassesController.create (src/classes/classes.controller.ts:64:13)
+
+    console.log
+      [ClassesService] Criando turma - teacherId (string): 69250ec453c41820d1cac744 teacherObjectId: 69250ec453c41820d1cac744
+
+      at ClassesService.create (src/classes/classes.service.ts:38:13)
+
+    console.log
+      [ClassesService] Turma criada - _id: 69250ec553c41820d1cac746 teacher_id: 69250ec453c41820d1cac744
+
+      at ClassesService.create (src/classes/classes.service.ts:47:13)
+
+    console.log
+      [ClassesController] Listando turmas - userId: 69250ec453c41820d1cac744 role: TEACHER tipo userId: string
+
+      at ClassesController.findAll (src/classes/classes.controller.ts:87:13)
+
+    console.log
+      [ClassesService] Filtrando por teacher_id: 69250ec453c41820d1cac744 ObjectId: 69250ec453c41820d1cac744
+
+      at ClassesService.findAll (src/classes/classes.service.ts:79:15)
+
+    console.log
+      [ClassesService] Filter aplicado: {
+        "teacher_id": "69250ec453c41820d1cac744"
+      }
+
+      at ClassesService.findAll (src/classes/classes.service.ts:113:13)
+
+    console.log
+      [ClassesService] Resultado: { total: 1, returned: 1 }
+
+      at ClassesService.findAll (src/classes/classes.service.ts:126:13)
+
+    console.log
+      [ClassesService] Primeira turma encontrada - _id: new ObjectId('69250ec553c41820d1cac746') teacher_id: new ObjectId('69250ec453c41820d1cac744')
+
+      at ClassesService.findAll (src/classes/classes.service.ts:128:15)
+
+PASS test/integration/decks.integration.spec.ts
+  ● Console
+
+    console.warn
+      ⚠️  Firebase Admin não configurado. Variáveis de ambiente faltando.
+
+      25 |       // Se as variáveis não estiverem configuradas, não inicializa
+      26 |       if (!projectId || !privateKey || !clientEmail) {
+    > 27 |         console.warn(
+         |                 ^
+      28 |           '⚠️  Firebase Admin não configurado. Variáveis de ambiente faltando.',
+      29 |         );
+      30 |         console.warn(
+
+      at FirebaseService.initializeFirebase (src/auth/firebase.service.ts:27:17)
+      at FirebaseService.onModuleInit (src/auth/firebase.service.ts:12:10)
+      at MapIterator.iteratee (node_modules/@nestjs/core/hooks/on-module-init.hook.js:22:43)
+      at MapIterator.next (node_modules/iterare/src/map.ts:9:39)
+      at IteratorWithOperators.next (node_modules/iterare/src/iterate.ts:19:28)
+          at Function.from (<anonymous>)
+      at IteratorWithOperators.toArray (node_modules/iterare/src/iterate.ts:227:22)
+      at callOperator (node_modules/@nestjs/core/hooks/on-module-init.hook.js:23:10)
+      at callModuleInitHook (node_modules/@nestjs/core/hooks/on-module-init.hook.js:43:23)
+      at Proxy.callInitHook (node_modules/@nestjs/core/nest-application-context.js:242:50)
+      at Proxy.init (node_modules/@nestjs/core/nest-application.js:103:9)
+      at Object.<anonymous> (test/integration/decks.integration.spec.ts:45:5)
+
+    console.warn
+         Configure FIREBASE_PROJECT_ID, FIREBASE_PRIVATE_KEY e FIREBASE_CLIENT_EMAIL no .env
+
+      28 |           '⚠️  Firebase Admin não configurado. Variáveis de ambiente faltando.',
+      29 |         );
+    > 30 |         console.warn(
+         |                 ^
+      31 |           '   Configure FIREBASE_PROJECT_ID, FIREBASE_PRIVATE_KEY e FIREBASE_CLIENT_EMAIL no .env',
+      32 |         );
+      33 |         return;
+
+      at FirebaseService.initializeFirebase (src/auth/firebase.service.ts:30:17)
+      at FirebaseService.onModuleInit (src/auth/firebase.service.ts:12:10)
+      at MapIterator.iteratee (node_modules/@nestjs/core/hooks/on-module-init.hook.js:22:43)
+      at MapIterator.next (node_modules/iterare/src/map.ts:9:39)
+      at IteratorWithOperators.next (node_modules/iterare/src/iterate.ts:19:28)
+          at Function.from (<anonymous>)
+      at IteratorWithOperators.toArray (node_modules/iterare/src/iterate.ts:227:22)
+      at callOperator (node_modules/@nestjs/core/hooks/on-module-init.hook.js:23:10)
+      at callModuleInitHook (node_modules/@nestjs/core/hooks/on-module-init.hook.js:43:23)
+      at Proxy.callInitHook (node_modules/@nestjs/core/nest-application-context.js:242:50)
+      at Proxy.init (node_modules/@nestjs/core/nest-application.js:103:9)
+      at Object.<anonymous> (test/integration/decks.integration.spec.ts:45:5)
+
+PASS test/integration/cards.integration.spec.ts
+  ● Console
+
+    console.warn
+      ⚠️  Firebase Admin não configurado. Variáveis de ambiente faltando.
+
+      25 |       // Se as variáveis não estiverem configuradas, não inicializa
+      26 |       if (!projectId || !privateKey || !clientEmail) {
+    > 27 |         console.warn(
+         |                 ^
+      28 |           '⚠️  Firebase Admin não configurado. Variáveis de ambiente faltando.',
+      29 |         );
+      30 |         console.warn(
+
+      at FirebaseService.initializeFirebase (src/auth/firebase.service.ts:27:17)
+      at FirebaseService.onModuleInit (src/auth/firebase.service.ts:12:10)
+      at MapIterator.iteratee (node_modules/@nestjs/core/hooks/on-module-init.hook.js:22:43)
+      at MapIterator.next (node_modules/iterare/src/map.ts:9:39)
+      at IteratorWithOperators.next (node_modules/iterare/src/iterate.ts:19:28)
+          at Function.from (<anonymous>)
+      at IteratorWithOperators.toArray (node_modules/iterare/src/iterate.ts:227:22)
+      at callOperator (node_modules/@nestjs/core/hooks/on-module-init.hook.js:23:10)
+      at callModuleInitHook (node_modules/@nestjs/core/hooks/on-module-init.hook.js:43:23)
+      at Proxy.callInitHook (node_modules/@nestjs/core/nest-application-context.js:242:50)
+      at Proxy.init (node_modules/@nestjs/core/nest-application.js:103:9)
+      at Object.<anonymous> (test/integration/cards.integration.spec.ts:51:5)
+
+    console.warn
+         Configure FIREBASE_PROJECT_ID, FIREBASE_PRIVATE_KEY e FIREBASE_CLIENT_EMAIL no .env
+
+      28 |           '⚠️  Firebase Admin não configurado. Variáveis de ambiente faltando.',
+      29 |         );
+    > 30 |         console.warn(
+         |                 ^
+      31 |           '   Configure FIREBASE_PROJECT_ID, FIREBASE_PRIVATE_KEY e FIREBASE_CLIENT_EMAIL no .env',
+      32 |         );
+      33 |         return;
+
+      at FirebaseService.initializeFirebase (src/auth/firebase.service.ts:30:17)
+      at FirebaseService.onModuleInit (src/auth/firebase.service.ts:12:10)
+      at MapIterator.iteratee (node_modules/@nestjs/core/hooks/on-module-init.hook.js:22:43)
+      at MapIterator.next (node_modules/iterare/src/map.ts:9:39)
+      at IteratorWithOperators.next (node_modules/iterare/src/iterate.ts:19:28)
+          at Function.from (<anonymous>)
+      at IteratorWithOperators.toArray (node_modules/iterare/src/iterate.ts:227:22)
+      at callOperator (node_modules/@nestjs/core/hooks/on-module-init.hook.js:23:10)
+      at callModuleInitHook (node_modules/@nestjs/core/hooks/on-module-init.hook.js:43:23)
+      at Proxy.callInitHook (node_modules/@nestjs/core/nest-application-context.js:242:50)
+      at Proxy.init (node_modules/@nestjs/core/nest-application.js:103:9)
+      at Object.<anonymous> (test/integration/cards.integration.spec.ts:51:5)
+
+
+Test Suites: 11 passed, 11 total
+Tests:       58 passed, 58 total
+Snapshots:   0 total
+Time:        2.871 s, estimated 3 s
+Ran all test suites.
+npm verbose cli /home/gianmalfate/.nvm/versions/node/v22.13.0/bin/node /home/gianmalfate/.nvm/versions/node/v22.13.0/bin/npm
+npm info using npm@10.9.2
+npm info using node@v22.13.0
+npm verbose title npm run test:e2e
+npm verbose argv "run" "test:e2e" "--runInBand" "--loglevel" "verbose"
+npm verbose logfile logs-max:10 dir:/home/gianmalfate/.npm/_logs/2025-11-25T02_04_53_651Z-
+npm verbose logfile /home/gianmalfate/.npm/_logs/2025-11-25T02_04_53_651Z-debug-0.log
+
+> server@0.0.1 test:e2e
+> jest --config ./test/jest-e2e.json
+
+PASS test/e2e/app.e2e.spec.ts
+  ● Console
+
+    console.log
+      ✅ Firebase Admin inicializado com sucesso
+
+      at FirebaseService.initializeFirebase (../src/auth/firebase.service.ts:48:17)
+          at Function.from (<anonymous>)
+
+PASS test/e2e/auth.e2e.spec.ts
+PASS test/e2e/classes.e2e.spec.ts
+  ● Console
+
+    console.log
+      ✅ Firebase Admin inicializado com sucesso
+
+      at FirebaseService.initializeFirebase (../src/auth/firebase.service.ts:48:17)
+          at Function.from (<anonymous>)
+
+    console.log
+      [ClassesController] Criando turma com teacherId: 69250ec77459ab7afa7ec812 tipo: string
+
+      at ClassesController.create (../src/classes/classes.controller.ts:64:13)
+
+    console.log
+      [ClassesService] Criando turma - teacherId (string): 69250ec77459ab7afa7ec812 teacherObjectId: 69250ec77459ab7afa7ec812
+
+      at ClassesService.create (../src/classes/classes.service.ts:38:13)
+
+    console.log
+      [ClassesService] Turma criada - _id: 69250ec77459ab7afa7ec815 teacher_id: 69250ec77459ab7afa7ec812
+
+      at ClassesService.create (../src/classes/classes.service.ts:47:13)
+
+    console.log
+      [ClassesController] Listando turmas - userId: 69250ec77459ab7afa7ec812 role: TEACHER tipo userId: string
+
+      at ClassesController.findAll (../src/classes/classes.controller.ts:87:13)
+
+    console.log
+      [ClassesService] Filtrando por teacher_id: 69250ec77459ab7afa7ec812 ObjectId: 69250ec77459ab7afa7ec812
+
+      at ClassesService.findAll (../src/classes/classes.service.ts:79:15)
+
+    console.log
+      [ClassesService] Filter aplicado: {
+        "teacher_id": "69250ec77459ab7afa7ec812"
+      }
+
+      at ClassesService.findAll (../src/classes/classes.service.ts:113:13)
+
+    console.log
+      [ClassesService] Resultado: { total: 1, returned: 1 }
+
+      at ClassesService.findAll (../src/classes/classes.service.ts:126:13)
+
+    console.log
+      [ClassesService] Primeira turma encontrada - _id: new ObjectId('69250ec77459ab7afa7ec815') teacher_id: new ObjectId('69250ec77459ab7afa7ec812')
+
+      at ClassesService.findAll (../src/classes/classes.service.ts:128:15)
+
+PASS test/e2e/decks.e2e.spec.ts
+  ● Console
+
+    console.log
+      ✅ Firebase Admin inicializado com sucesso
+
+      at FirebaseService.initializeFirebase (../src/auth/firebase.service.ts:48:17)
+          at Function.from (<anonymous>)
+
+PASS test/e2e/cards.e2e.spec.ts
+  ● Console
+
+    console.log
+      ✅ Firebase Admin inicializado com sucesso
+
+      at FirebaseService.initializeFirebase (../src/auth/firebase.service.ts:48:17)
+          at Function.from (<anonymous>)
+
+
+Test Suites: 5 passed, 5 total
+Tests:       18 passed, 18 total
+Snapshots:   0 total
+Time:        2.371 s
+Ran all test suites.
+npm verbose cwd /home/gianmalfate/Documentos/usp/usp-synapse/synapse/apps/server
+npm verbose os Linux 6.14.0-35-generic
+npm verbose node v22.13.0
+npm verbose npm  v10.9.2
+npm verbose exit 0
+npm info ok
