@@ -15,6 +15,18 @@ import type {
   Assignment,
   CreateAssignmentDto,
   QueryAssignmentDto,
+  QueueQueryDto,
+  QueueResponse,
+  CreateReviewDto,
+  ReviewResponse,
+  ProgressQueryDto,
+  ProgressResponse,
+  StudentOverview,
+  DeckAnalytics,
+  StudentActivity,
+  TeacherOverview,
+  ClassReport,
+  DeckPerformance,
 } from './api/types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
@@ -181,5 +193,64 @@ export const assignmentsApi = {
     return apiRequest<{ message: string }>(`/assignments/${id}`, {
       method: 'DELETE',
     });
+  },
+};
+
+// API para Study/SRS
+export const studyApi = {
+  /**
+   * Busca a fila de cards para estudar (novos + devidos)
+   */
+  getQueue: (params: QueueQueryDto): Promise<QueueResponse> => {
+    const queryString = buildQueryString(params as Record<string, unknown>);
+    return apiRequest<QueueResponse>(`/study/queue${queryString}`);
+  },
+
+  /**
+   * Submete uma revisão de card e recebe o próximo agendamento
+   */
+  submitReview: (data: CreateReviewDto): Promise<ReviewResponse> => {
+    return apiRequest<ReviewResponse>('/study/review', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  /**
+   * Busca o progresso do aluno (todos os decks ou um específico)
+   */
+  getProgress: (params?: ProgressQueryDto): Promise<ProgressResponse> => {
+    const queryString = buildQueryString(params as Record<string, unknown>);
+    return apiRequest<ProgressResponse>(`/study/progress${queryString}`);
+  },
+};
+
+// API para Reports
+export const reportsApi = {
+  // Student Reports
+  getStudentOverview: (): Promise<StudentOverview> => {
+    return apiRequest<StudentOverview>('/reports/student/overview');
+  },
+
+  getStudentDeckAnalytics: (deckId: string): Promise<DeckAnalytics> => {
+    return apiRequest<DeckAnalytics>(`/reports/student/deck/${deckId}`);
+  },
+
+  getStudentActivity: (days?: number): Promise<StudentActivity> => {
+    const queryString = days ? `?days=${days}` : '';
+    return apiRequest<StudentActivity>(`/reports/student/activity${queryString}`);
+  },
+
+  // Teacher Reports
+  getTeacherOverview: (): Promise<TeacherOverview> => {
+    return apiRequest<TeacherOverview>('/reports/teacher/overview');
+  },
+
+  getClassReport: (classId: string): Promise<ClassReport> => {
+    return apiRequest<ClassReport>(`/reports/teacher/class/${classId}`);
+  },
+
+  getDeckPerformance: (deckId: string): Promise<DeckPerformance> => {
+    return apiRequest<DeckPerformance>(`/reports/teacher/deck/${deckId}/performance`);
   },
 };

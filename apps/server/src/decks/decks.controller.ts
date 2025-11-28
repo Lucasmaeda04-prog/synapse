@@ -81,6 +81,8 @@ export class DecksController {
   }
 
   @Get(':id')
+  @UseGuards(FirebaseAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Buscar um deck por ID' })
   @ApiResponse({
     status: 200,
@@ -89,11 +91,11 @@ export class DecksController {
   })
   @ApiResponse({ status: 404, description: 'Deck não encontrado' })
   @ApiResponse({ status: 403, description: 'Acesso negado' })
+  @ApiResponse({ status: 401, description: 'Não autorizado' })
   findOne(
     @Param('id') id: string,
     @Request() req: any,
   ): Promise<DeckResponseDto> {
-    // TODO: Implementar autenticação e pegar userId do req.user
     const userId = req.user?.userId || undefined;
     return this.decksService.findOne(id, userId);
   }

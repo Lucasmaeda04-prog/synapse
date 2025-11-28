@@ -13,7 +13,7 @@ import DeckDetail from "./pages/DeckDetail";
 import Classes from "./pages/Classes";
 import ClassNew from "./pages/ClassNew";
 import ClassDetail from "./pages/ClassDetail";
-import Study from "./pages/Study";
+import StudySRS from "./pages/StudySRS";
 import Reports from "./pages/Reports";
 import DashboardLayout from "@/components/DashboardLayout";
 import NotFound from "./pages/NotFound";
@@ -76,7 +76,7 @@ const App = () => (
             
             <Route path="/study/:deckId" element={
               <ProtectedRoute>
-                <DashboardLayout><Study /></DashboardLayout>
+                <DashboardLayout><StudySRS /></DashboardLayout>
               </ProtectedRoute>
             } />
             

@@ -148,6 +148,151 @@ export interface UpdateCardDto {
   hints?: string[];
 }
 
+// ============= STUDY/SRS =============
+
+export interface CardInQueue {
+  card_id: string;
+  deck_id: string;
+  front: string;
+  back: string;
+  next_due_at?: Date;
+  is_new: boolean;
+}
+
+export interface QueueResponse {
+  total: number;
+  cards: CardInQueue[];
+}
+
+export interface QueueQueryDto {
+  deckId: string;
+  limit?: number;
+}
+
+export interface CreateReviewDto {
+  card_id: string;
+  deck_id: string;
+  rating: 0 | 1 | 2 | 3; // 0=Again, 1=Hard, 2=Good, 3=Easy
+  elapsed_ms: number;
+}
+
+export interface ReviewResponse {
+  success: boolean;
+  next_due_at: Date;
+  stability: number;
+  difficulty: number;
+  interval_days: number;
+}
+
+export interface DeckProgress {
+  deck_id: string;
+  total_cards: number;
+  learned: number;
+  due_today: number;
+  last_activity_at?: Date;
+}
+
+export interface ProgressResponse {
+  decks: DeckProgress[];
+}
+
+export interface ProgressQueryDto {
+  deckId?: string;
+}
+
+// ============= REPORTS =============
+
+// Student Reports
+export interface DeckAnalytics {
+  deck_id: string;
+  deck_title: string;
+  total_cards: number;
+  learned: number;
+  due_today: number;
+  total_answers: number;
+  correct_answers: number;
+  accuracy: number;
+  time_spent_minutes: number;
+  last_activity_at?: Date;
+}
+
+export interface StudentOverview {
+  student_id: string;
+  total_decks: number;
+  total_cards: number;
+  total_learned: number;
+  total_due_today: number;
+  overall_accuracy: number;
+  total_time_spent_minutes: number;
+  decks: DeckAnalytics[];
+}
+
+export interface StudySession {
+  date: string;
+  cards_studied: number;
+  accuracy: number;
+  time_minutes: number;
+}
+
+export interface StudentActivity {
+  sessions: StudySession[];
+  current_streak: number;
+  longest_streak: number;
+}
+
+// Teacher Reports
+export interface StudentProgressReport {
+  student_id: string;
+  student_name: string;
+  student_email: string;
+  total_cards: number;
+  learned: number;
+  progress_percent: number;
+  accuracy: number;
+  time_spent_minutes: number;
+  last_activity_at?: Date;
+}
+
+export interface ClassReport {
+  class_id: string;
+  class_name: string;
+  total_students: number;
+  total_decks: number;
+  avg_progress: number;
+  avg_accuracy: number;
+  students: StudentProgressReport[];
+}
+
+export interface DeckPerformance {
+  deck_id: string;
+  deck_title: string;
+  total_cards: number;
+  students_count: number;
+  avg_progress: number;
+  avg_accuracy: number;
+  hardest_card?: {
+    card_id: string;
+    front: string;
+    accuracy: number;
+  };
+  easiest_card?: {
+    card_id: string;
+    front: string;
+    accuracy: number;
+  };
+}
+
+export interface TeacherOverview {
+  teacher_id: string;
+  total_classes: number;
+  total_students: number;
+  total_decks: number;
+  total_cards: number;
+  total_assignments: number;
+  avg_student_progress: number;
+  avg_student_accuracy: number;
+}
+
 // ============= ERROR TYPES =============
 
 export interface ApiError {

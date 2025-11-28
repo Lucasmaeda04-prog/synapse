@@ -12,6 +12,11 @@ import { User, UserSchema } from '../database/schemas/user.schema';
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
   ],
   providers: [FirebaseService, FirebaseAuthGuard, RolesGuard],
-  exports: [FirebaseService, FirebaseAuthGuard, RolesGuard],
+  exports: [
+    FirebaseService,
+    FirebaseAuthGuard,
+    RolesGuard,
+    MongooseModule, // Export MongooseModule to provide access to User model
+  ],
 })
 export class AuthModule {}
