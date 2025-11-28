@@ -31,10 +31,10 @@ async function bootstrap() {
       .setDescription(
         'API do Synapse - Plataforma de aprendizado com repetição espaçada\n\n' +
           '## Recursos disponíveis\n' +
-          '- **Decks**: Criar e gerenciar decks de flashcards\n' +
-          '- **Classes**: Gerenciar turmas e alunos\n' +
-          '- **Cards**: Gerenciar cards dentro dos decks (em breve)\n' +
-          '- **Study**: Sistema de estudo com repetição espaçada (em breve)\n' +
+          '- **Decks**: Criar e gerenciar decks de flashcards ✅\n' +
+          '- **Classes**: Gerenciar turmas e alunos ✅\n' +
+          '- **Study**: Sistema de estudo com repetição espaçada (SRS) ✅\n' +
+          '- **Cards**: Gerenciar cards dentro dos decks ✅\n' +
           '- **Reports**: Relatórios de progresso (em breve)\n\n' +
           '## Autenticação\n' +
           'A autenticação será implementada via JWT Bearer Token.\n' +
@@ -43,6 +43,7 @@ async function bootstrap() {
       .setVersion('0.1.0')
       .addTag('decks', 'Operações relacionadas a decks de flashcards')
       .addTag('classes', 'Operações relacionadas a turmas')
+      .addTag('study', 'Sistema de estudo com repetição espaçada (SRS)')
       .addTag('health', 'Status e saúde da aplicação')
       .addBearerAuth(
         {

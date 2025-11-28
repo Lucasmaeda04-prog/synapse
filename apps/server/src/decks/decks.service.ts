@@ -211,9 +211,13 @@ export class DecksService {
       throw new NotFoundException(`Deck with ID ${id} not found`);
     }
 
-    // Verificar acesso: proprietário ou deck público
+    // Verificar acesso: proprietário, deck público, ou assignment
     if (userId && deck.owner_id.toString() !== userId && !deck.is_public) {
-      throw new ForbiddenException('You do not have access to this deck');
+      // Verificar se o usuário tem acesso via assignment (direto ou via turma)
+      const hasAccess = await this.checkUserHasAccessToDeck(id, userId);
+      if (!hasAccess) {
+        throw new ForbiddenException('You do not have access to this deck');
+      }
     }
 
     return this.toResponseDto(deck);
@@ -280,6 +284,36 @@ export class DecksService {
     await this.deckModel
       .findByIdAndUpdate(deckId, { $inc: { cards_count: -1 } })
       .exec();
+  }
+
+  /**
+   * Verifica se o usuário tem acesso ao deck via assignment (direto ou via turma)
+   */
+  private async checkUserHasAccessToDeck(
+    deckId: string,
+    userId: string,
+  ): Promise<boolean> {
+    const deckObjectId = new Types.ObjectId(deckId);
+    const userObjectId = new Types.ObjectId(userId);
+
+    // Buscar turmas do usuário
+    const userClasses = await this.classModel
+      .find({ student_ids: userObjectId })
+      .select('_id')
+      .lean();
+
+    const classIds = userClasses.map((c) => c._id);
+
+    // Verificar se existe assignment direto para o usuário ou para alguma turma dele
+    const assignment = await this.assignmentModel.exists({
+      deck_id: deckObjectId,
+      $or: [
+        { student_id: userObjectId },
+        { class_id: { $in: classIds } },
+      ],
+    });
+
+    return !!assignment;
   }
 
   private toResponseDto(deck: any): DeckResponseDto {

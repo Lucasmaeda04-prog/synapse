@@ -13,6 +13,8 @@ import { DecksModule } from './decks/decks.module';
 import { ClassesModule } from './classes/classes.module';
 import { CardsModule } from './cards/cards.module';
 import { AssignmentsModule } from './assignments/assignments.module';
+import { StudyModule } from './study/study.module';
+import { ReportsModule } from './reports/reports.module';
 
 @Module({
   imports: [
@@ -34,6 +36,8 @@ import { AssignmentsModule } from './assignments/assignments.module';
     ClassesModule,
     CardsModule,
     AssignmentsModule,
+    StudyModule,
+    ReportsModule,
   ],
   controllers: [AppController, HealthController, AuthController],
   providers: [AppService, HealthService],

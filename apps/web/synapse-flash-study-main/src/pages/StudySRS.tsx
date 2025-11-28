@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
-import { ArrowLeft, Loader2, TrendingUp } from "lucide-react";
+import { ArrowLeft, Loader2, Timer, TrendingUp } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDeck } from "@/hooks/api/useDecks";
 import { useStudyQueue, useSubmitReview, useStudyProgress } from "@/hooks/api/useStudy";
@@ -18,7 +18,7 @@ import type { CardInQueue } from "@/lib/api/types";
 
 type Rating = 0 | 1 | 2 | 3; // Again | Hard | Good | Easy
 
-export default function Study() {
+export default function StudySRS() {
   const { deckId } = useParams<{ deckId: string }>();
   const resolvedDeckId = deckId ?? "";
   const { isAuthenticated } = useAuth();
